@@ -1,4 +1,4 @@
-# HydroMax Variation Matrix
+# Palaplast
 
 A lightweight WooCommerce plugin that renders a clean variation matrix (SKU + attributes + price) above product tabs on variable product pages.
 
@@ -19,8 +19,8 @@ A lightweight WooCommerce plugin that renders a clean variation matrix (SKU + at
 
 ## Installation
 
-1. Copy `hydromax.php` to your plugins directory as `hydromax-variation-matrix/hydromax.php`.
-2. Activate **HydroMax Variation Matrix** in WordPress admin.
+1. Copy `palaplast.php` to your plugins directory as `palaplast/palaplast.php`.
+2. Activate **Palaplast** in WordPress admin.
 3. Open any variable product page to verify the matrix appears above product tabs.
 
 ## Requirements

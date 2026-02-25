@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: HydroMax Variation Matrix
+ * Plugin Name: Palaplast
  * Description: Displays a clean, compact variation matrix (SKU + attributes + price) above the product tabs for variable WooCommerce products.
  * Version: 1.6.0
- * Author: HydroMax
+ * Author: Palaplast
  * License: GPL-2.0-or-later
- * Text Domain: hydromax-variation-matrix
+ * Text Domain: palaplast
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * WC requires at least: 6.0
@@ -16,11 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'HydroMax_Variation_Matrix' ) ) {
+if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 	/**
 	 * Render a variation matrix for variable products.
 	 */
-	final class HydroMax_Variation_Matrix {
+	final class Palaplast_Variation_Matrix {
 		/**
 		 * Constructor.
 		 */
@@ -52,9 +52,9 @@ if ( ! class_exists( 'HydroMax_Variation_Matrix' ) ) {
 				return;
 			}
 
-			wp_register_style( 'hydromax-variation-matrix', false, array(), '1.6.0' );
-			wp_enqueue_style( 'hydromax-variation-matrix' );
-			wp_add_inline_style( 'hydromax-variation-matrix', $this->get_styles() );
+			wp_register_style( 'palaplast', false, array(), '1.6.0' );
+			wp_enqueue_style( 'palaplast' );
+			wp_add_inline_style( 'palaplast', $this->get_styles() );
 		}
 
 		/**
@@ -76,17 +76,17 @@ if ( ! class_exists( 'HydroMax_Variation_Matrix' ) ) {
 				return;
 			}
 			?>
-			<div class="hydromax-matrix">
-				<h4 class="hydromax-title"><?php esc_html_e( 'Product Variations', 'hydromax-variation-matrix' ); ?></h4>
-				<div class="hydromax-table-wrap">
-					<table class="hydromax-table" aria-label="<?php esc_attr_e( 'Product variation matrix', 'hydromax-variation-matrix' ); ?>">
+			<div class="palaplast-matrix">
+				<h4 class="palaplast-title"><?php esc_html_e( 'Product Variations', 'palaplast' ); ?></h4>
+				<div class="palaplast-table-wrap">
+					<table class="palaplast-table" aria-label="<?php esc_attr_e( 'Product variation matrix', 'palaplast' ); ?>">
 						<thead>
 							<tr>
-								<th scope="col" class="col-sku"><?php esc_html_e( 'SKU', 'hydromax-variation-matrix' ); ?></th>
+								<th scope="col" class="col-sku"><?php esc_html_e( 'SKU', 'palaplast' ); ?></th>
 								<?php foreach ( $attributes as $attr_name ) : ?>
 									<th scope="col" class="col-attr"><?php echo esc_html( wc_attribute_label( $attr_name ) ); ?></th>
 								<?php endforeach; ?>
-								<th scope="col" class="col-price"><?php esc_html_e( 'Price', 'hydromax-variation-matrix' ); ?></th>
+								<th scope="col" class="col-price"><?php esc_html_e( 'Price', 'palaplast' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -151,9 +151,9 @@ if ( ! class_exists( 'HydroMax_Variation_Matrix' ) ) {
 		 * @return string
 		 */
 		private function get_styles() {
-			return '.hydromax-matrix{margin-top:10px;margin-bottom:30px}.hydromax-title{font-size:14px;font-weight:500;margin-bottom:10px;color:#222}.hydromax-table-wrap{overflow-x:auto}.hydromax-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4}.hydromax-table th,.hydromax-table td{border-bottom:1px solid #eee;padding:6px 10px;vertical-align:middle;white-space:nowrap}.hydromax-table .col-sku{text-align:left}.hydromax-table .col-attr{text-align:center}.hydromax-table .col-price{text-align:right}.hydromax-table th{font-weight:600;color:#333;background:#fafafa}.hydromax-table tr:last-child td{border-bottom:none}@media (max-width:768px){.hydromax-table{font-size:12px}.hydromax-table th,.hydromax-table td{padding:5px 6px}}';
+			return '.palaplast-matrix{margin-top:10px;margin-bottom:30px}.palaplast-title{font-size:14px;font-weight:500;margin-bottom:10px;color:#222}.palaplast-table-wrap{overflow-x:auto}.palaplast-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4}.palaplast-table th,.palaplast-table td{border-bottom:1px solid #eee;padding:6px 10px;vertical-align:middle;white-space:nowrap}.palaplast-table .col-sku{text-align:left}.palaplast-table .col-attr{text-align:center}.palaplast-table .col-price{text-align:right}.palaplast-table th{font-weight:600;color:#333;background:#fafafa}.palaplast-table tr:last-child td{border-bottom:none}@media (max-width:768px){.palaplast-table{font-size:12px}.palaplast-table th,.palaplast-table td{padding:5px 6px}}';
 		}
 	}
 
-	new HydroMax_Variation_Matrix();
+	new Palaplast_Variation_Matrix();
 }
