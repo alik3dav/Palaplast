@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Palaplast
  * Description: Displays a clean, compact variation matrix (SKU + attributes + price) above the product tabs for variable WooCommerce products.
- * Version: 1.6.1
+ * Version: 1.6.2
  * Author: Palaplast
  * License: GPL-2.0-or-later
  * Text Domain: palaplast
@@ -14,6 +14,22 @@
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
+}
+
+add_action( 'before_woocommerce_init', 'palaplast_declare_woocommerce_compatibility' );
+
+/**
+ * Declare compatibility with WooCommerce features that trigger plugin compatibility checks.
+ *
+ * @return void
+ */
+function palaplast_declare_woocommerce_compatibility() {
+	if ( ! class_exists( '\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil' ) ) {
+		return;
+	}
+
+	\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+	\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
 }
 
 if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
@@ -56,7 +72,7 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 				return;
 			}
 
-			wp_register_style( 'palaplast', false, array(), '1.6.1' );
+			wp_register_style( 'palaplast', false, array(), '1.6.2' );
 			wp_enqueue_style( 'palaplast' );
 			wp_add_inline_style( 'palaplast', $this->get_styles() );
 		}
@@ -154,7 +170,7 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 		 *
 		 * @return bool
 		 */
-		public function show_variations_without_price( $hide ) {
+		public function show_variations_without_price( $hide, $product_id = 0, $variation = null ) {
 			if ( is_admin() && ! wp_doing_ajax() ) {
 				return $hide;
 			}
