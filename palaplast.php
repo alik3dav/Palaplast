@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Palaplast
  * Description: Displays a clean, compact variation matrix (SKU + attributes + price) above the product tabs for variable WooCommerce products.
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author: Palaplast
  * License: GPL-2.0-or-later
  * Text Domain: palaplast
@@ -40,6 +40,10 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 
 			add_action( 'woocommerce_after_single_product_summary', array( $this, 'render_matrix_table' ), 4 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
+			add_filter( 'woocommerce_hide_invisible_variations', array( $this, 'show_variations_without_price' ), 10, 3 );
+			add_filter( 'woocommerce_get_price_html', array( $this, 'hide_catalog_prices' ), 10, 2 );
+			add_filter( 'woocommerce_available_variation', array( $this, 'remove_variation_price_payload' ), 10, 3 );
+			add_filter( 'woocommerce_show_variation_price', '__return_false' );
 		}
 
 		/**
@@ -52,7 +56,7 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 				return;
 			}
 
-			wp_register_style( 'palaplast', false, array(), '1.6.0' );
+			wp_register_style( 'palaplast', false, array(), '1.6.1' );
 			wp_enqueue_style( 'palaplast' );
 			wp_add_inline_style( 'palaplast', $this->get_styles() );
 		}
@@ -86,7 +90,6 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 								<?php foreach ( $attributes as $attr_name ) : ?>
 									<th scope="col" class="col-attr"><?php echo esc_html( wc_attribute_label( $attr_name ) ); ?></th>
 								<?php endforeach; ?>
-								<th scope="col" class="col-price"><?php esc_html_e( 'Price', 'palaplast' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -109,7 +112,6 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 										?>
 										<td class="col-attr"><?php echo esc_html( $value ); ?></td>
 									<?php endforeach; ?>
-									<td class="col-price"><?php echo wp_kses_post( $variation_obj->get_price_html() ); ?></td>
 								</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -146,12 +148,68 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 		}
 
 		/**
+		 * Keep variations selectable even when no price is set.
+		 *
+		 * @param bool $hide Whether invisible variations should be hidden.
+		 *
+		 * @return bool
+		 */
+		public function show_variations_without_price( $hide ) {
+			if ( is_admin() && ! wp_doing_ajax() ) {
+				return $hide;
+			}
+
+			return false;
+		}
+
+		/**
+		 * Remove frontend price HTML to keep catalog mode active.
+		 *
+		 * @param string     $price_html Existing price HTML.
+		 * @param WC_Product $product    Product object.
+		 *
+		 * @return string
+		 */
+		public function hide_catalog_prices( $price_html, $product ) {
+			if ( is_admin() && ! wp_doing_ajax() ) {
+				return $price_html;
+			}
+
+			if ( ! $product instanceof WC_Product ) {
+				return '';
+			}
+
+			return '';
+		}
+
+		/**
+		 * Keep variation payload valid while removing price fragments in catalog mode.
+		 *
+		 * @param array                $variation_data Variation payload.
+		 * @param WC_Product           $product        Parent product.
+		 * @param WC_Product_Variation $variation      Variation product.
+		 *
+		 * @return array
+		 */
+		public function remove_variation_price_payload( $variation_data, $product, $variation ) {
+			if ( is_admin() && ! wp_doing_ajax() ) {
+				return $variation_data;
+			}
+
+			$variation_data['price_html']     = '';
+			$variation_data['display_price']  = 0;
+			$variation_data['display_regular_price'] = 0;
+
+			return $variation_data;
+		}
+
+		/**
 		 * Plugin styles.
 		 *
 		 * @return string
 		 */
 		private function get_styles() {
-			return '.palaplast-matrix{margin-top:10px;margin-bottom:30px}.palaplast-title{font-size:14px;font-weight:500;margin-bottom:10px;color:#222}.palaplast-table-wrap{overflow-x:auto}.palaplast-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4}.palaplast-table th,.palaplast-table td{border-bottom:1px solid #eee;padding:6px 10px;vertical-align:middle;white-space:nowrap}.palaplast-table .col-sku{text-align:left}.palaplast-table .col-attr{text-align:center}.palaplast-table .col-price{text-align:right}.palaplast-table th{font-weight:600;color:#333;background:#fafafa}.palaplast-table tr:last-child td{border-bottom:none}@media (max-width:768px){.palaplast-table{font-size:12px}.palaplast-table th,.palaplast-table td{padding:5px 6px}}';
+			return '.palaplast-matrix{margin-top:10px;margin-bottom:30px}.palaplast-title{font-size:14px;font-weight:500;margin-bottom:10px;color:#222}.palaplast-table-wrap{overflow-x:auto}.palaplast-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4}.palaplast-table th,.palaplast-table td{border-bottom:1px solid #eee;padding:6px 10px;vertical-align:middle;white-space:nowrap}.palaplast-table .col-sku{text-align:left}.palaplast-table .col-attr{text-align:center}.palaplast-table th{font-weight:600;color:#333;background:#fafafa}.palaplast-table tr:last-child td{border-bottom:none}@media (max-width:768px){.palaplast-table{font-size:12px}.palaplast-table th,.palaplast-table td{padding:5px 6px}}';
 		}
 	}
 
