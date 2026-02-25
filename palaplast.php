@@ -60,6 +60,7 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			add_filter( 'woocommerce_get_price_html', array( $this, 'hide_catalog_prices' ), 10, 2 );
 			add_filter( 'woocommerce_available_variation', array( $this, 'remove_variation_price_payload' ), 10, 3 );
 			add_filter( 'woocommerce_show_variation_price', '__return_false' );
+			add_filter( 'woocommerce_variation_option_name', array( $this, 'preserve_variation_option_name' ), 10, 4 );
 		}
 
 		/**
@@ -123,8 +124,8 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 									<?php foreach ( $attributes as $attr_name ) : ?>
 										<?php
 										$attribute_key = 'attribute_' . sanitize_title( $attr_name );
-										$value_slug    = isset( $variation['attributes'][ $attribute_key ] ) ? $variation['attributes'][ $attribute_key ] : '';
-										$value         = $this->get_attribute_value( $attr_name, $value_slug );
+										$value_raw = isset( $variation['attributes'][ $attribute_key ] ) ? $variation['attributes'][ $attribute_key ] : '';
+										$value     = $this->get_attribute_value( $product, $attr_name, $value_raw );
 										?>
 										<td class="col-attr"><?php echo esc_html( $value ); ?></td>
 									<?php endforeach; ?>
@@ -140,27 +141,129 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 		/**
 		 * Resolve attribute labels (term name or raw custom value).
 		 *
-		 * @param string $attr_name  Attribute taxonomy key.
-		 * @param string $value_slug Stored value from variation data.
+		 * @param WC_Product $product   Parent variable product.
+		 * @param string     $attr_name Attribute taxonomy key.
+		 * @param string     $value_raw Stored value from variation data.
 		 *
 		 * @return string
 		 */
-		private function get_attribute_value( $attr_name, $value_slug ) {
-			if ( '' === $value_slug ) {
+		private function get_attribute_value( $product, $attr_name, $value_raw ) {
+			$value_raw = rawurldecode( wp_unslash( (string) $value_raw ) );
+
+			if ( '' === $value_raw ) {
 				return '—';
 			}
 
-			$taxonomy = wc_attribute_taxonomy_name( $attr_name );
+			if ( taxonomy_exists( $attr_name ) ) {
+				$term = get_term_by( 'slug', $value_raw, $attr_name );
 
-			if ( taxonomy_exists( $taxonomy ) ) {
-				$term = get_term_by( 'slug', $value_slug, $taxonomy );
+				if ( ! $term instanceof WP_Term ) {
+					$term = get_term_by( 'name', $value_raw, $attr_name );
+				}
 
 				if ( $term instanceof WP_Term ) {
 					return $term->name;
 				}
 			}
 
-			return wc_clean( $value_slug );
+			$resolved_custom_value = $this->resolve_custom_attribute_value( $product, $attr_name, $value_raw );
+
+			if ( '' !== $resolved_custom_value ) {
+				return $resolved_custom_value;
+			}
+
+			return wc_clean( $value_raw );
+		}
+
+		/**
+		 * Return a human-readable option label in variation selectors.
+		 *
+		 * @param string              $option_name Existing option label.
+		 * @param string|int|WP_Term  $option      Option value.
+		 * @param string              $attribute   Attribute key.
+		 * @param WC_Product|null     $product     Product context.
+		 *
+		 * @return string
+		 */
+		public function preserve_variation_option_name( $option_name, $option = null, $attribute = '', $product = null ) {
+			if ( ! $product instanceof WC_Product ) {
+				global $product;
+				$product = $product instanceof WC_Product ? $product : null;
+			}
+
+			if ( ! is_scalar( $option ) ) {
+				return $option_name;
+			}
+
+			$option_value = rawurldecode( wp_unslash( (string) $option ) );
+
+			if ( taxonomy_exists( $attribute ) ) {
+				$term = get_term_by( 'slug', $option_value, $attribute );
+
+				if ( ! $term instanceof WP_Term ) {
+					$term = get_term_by( 'name', $option_value, $attribute );
+				}
+
+				if ( $term instanceof WP_Term ) {
+					return $term->name;
+				}
+			}
+
+			if ( $product instanceof WC_Product ) {
+				$resolved_custom_value = $this->resolve_custom_attribute_value( $product, $attribute, $option_value );
+
+				if ( '' !== $resolved_custom_value ) {
+					return $resolved_custom_value;
+				}
+			}
+
+			return $option_name;
+		}
+
+		/**
+		 * Resolve a custom attribute option to its original value as entered in product settings.
+		 *
+		 * @param WC_Product $product      Product object.
+		 * @param string     $attribute    Attribute key.
+		 * @param string     $current_value Current stored value.
+		 *
+		 * @return string
+		 */
+		private function resolve_custom_attribute_value( $product, $attribute, $current_value ) {
+			$attributes = $product->get_attributes();
+
+			if ( ! isset( $attributes[ $attribute ] ) || ! is_a( $attributes[ $attribute ], 'WC_Product_Attribute' ) ) {
+				return '';
+			}
+
+			$options = $attributes[ $attribute ]->get_options();
+
+			if ( empty( $options ) ) {
+				return '';
+			}
+
+			$normalized_current_value = $this->normalize_attribute_value( $current_value );
+
+			foreach ( $options as $option ) {
+				$option = rawurldecode( wp_unslash( (string) $option ) );
+
+				if ( $option === $current_value || $this->normalize_attribute_value( $option ) === $normalized_current_value ) {
+					return $option;
+				}
+			}
+
+			return '';
+		}
+
+		/**
+		 * Normalize an attribute value for comparisons without changing displayed text.
+		 *
+		 * @param string $value Attribute value.
+		 *
+		 * @return string
+		 */
+		private function normalize_attribute_value( $value ) {
+			return sanitize_title( rawurldecode( wp_unslash( (string) $value ) ) );
 		}
 
 		/**
