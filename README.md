@@ -9,6 +9,7 @@ A lightweight WooCommerce plugin that renders a clean variation matrix (SKU + at
 - Resolves taxonomy attribute values to proper term names (e.g., preserving capitalization).
 - Gracefully handles empty values by printing `—`.
 - Adds responsive horizontal scrolling on smaller screens.
+- Adds Technical Sheet and Pricelist PDF download buttons on product pages based on category inheritance rules.
 
 ## Technical notes
 
