@@ -23,6 +23,10 @@ define( 'PALAPLAST_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 add_action( 'before_woocommerce_init', 'palaplast_declare_woocommerce_compatibility' );
 add_action( 'plugins_loaded', 'palaplast_init' );
+add_action( 'init', 'palaplast_maybe_flush_rewrite_rules', 20 );
+
+register_activation_hook( PALAPLAST_PLUGIN_FILE, 'palaplast_activate' );
+register_deactivation_hook( PALAPLAST_PLUGIN_FILE, 'palaplast_deactivate' );
 
 function palaplast_declare_woocommerce_compatibility() {
 	if ( ! class_exists( '\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil' ) ) {
@@ -53,4 +57,26 @@ function palaplast_init() {
 
 	require_once PALAPLAST_PLUGIN_DIR . 'public/product-pdf-buttons.php';
 	require_once PALAPLAST_PLUGIN_DIR . 'public/public-init.php';
+}
+
+function palaplast_activate() {
+	require_once PALAPLAST_PLUGIN_DIR . 'includes/events.php';
+	palaplast_register_event_post_type();
+	flush_rewrite_rules();
+	update_option( 'palaplast_version', PALAPLAST_VERSION );
+}
+
+function palaplast_deactivate() {
+	flush_rewrite_rules();
+}
+
+function palaplast_maybe_flush_rewrite_rules() {
+	$installed_version = get_option( 'palaplast_version' );
+
+	if ( PALAPLAST_VERSION === $installed_version ) {
+		return;
+	}
+
+	flush_rewrite_rules( false );
+	update_option( 'palaplast_version', PALAPLAST_VERSION );
 }
