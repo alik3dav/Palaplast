@@ -323,12 +323,24 @@ function palaplast_render_events_shortcode( $atts ) {
 	$defaults = array(
 		'posts_per_page' => 10,
 		'show_excerpt'   => 'true',
-		'type'           => 'event',
+		'type'           => '',
+		'post_type'      => '',
 	);
 
 	$atts = shortcode_atts( $defaults, $atts, 'palaplast_events' );
 
-	$post_type = sanitize_key( (string) $atts['type'] );
+	$post_type_input = '';
+	if ( '' !== (string) $atts['post_type'] ) {
+		$post_type_input = (string) $atts['post_type'];
+	} elseif ( '' !== (string) $atts['type'] ) {
+		$post_type_input = (string) $atts['type'];
+	}
+
+	$post_type = sanitize_key( $post_type_input );
+	if ( 'events' === $post_type ) {
+		$post_type = 'event';
+	}
+
 	if ( 'event' !== $post_type ) {
 		$post_type = 'event';
 	}
