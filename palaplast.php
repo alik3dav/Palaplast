@@ -615,13 +615,25 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 		 * @return void
 		 */
 		public function render_category_sheet_edit_field( $term ) {
-			$sheet_id = (int) get_term_meta( $term->term_id, 'palaplast_technical_sheet_id', true );
+			$sheet_id         = (int) get_term_meta( $term->term_id, 'palaplast_technical_sheet_id', true );
+			$inherited_sheet  = $this->get_category_inherited_sheet( (int) $term->term_id );
+			$inherited_name   = '';
+
+			if ( ! empty( $inherited_sheet['name'] ) ) {
+				$inherited_name = (string) $inherited_sheet['name'];
+			}
 			?>
 			<tr class="form-field term-palaplast-sheet-wrap">
 				<th scope="row"><label for="palaplast_technical_sheet_id"><?php esc_html_e( 'Technical Sheet', 'palaplast' ); ?></label></th>
 				<td>
 					<?php $this->render_category_sheet_dropdown( $sheet_id ); ?>
 					<p class="description"><?php esc_html_e( 'Select a technical sheet PDF for this category.', 'palaplast' ); ?></p>
+					<p class="description"><strong><?php esc_html_e( 'Selected Technical Sheet:', 'palaplast' ); ?></strong>
+						<?php echo $sheet_id ? esc_html( $this->get_sheet_name_by_id( $sheet_id ) ) : esc_html__( 'None', 'palaplast' ); ?>
+					</p>
+					<p class="description"><strong><?php esc_html_e( 'Inherited Technical Sheet:', 'palaplast' ); ?></strong>
+						<?php echo $inherited_name ? esc_html( $inherited_name ) : esc_html__( 'None', 'palaplast' ); ?>
+					</p>
 				</td>
 			</tr>
 			<?php
@@ -688,28 +700,127 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 				return array();
 			}
 
-			$sheets = $this->get_technical_sheets();
+			sort( $terms, SORT_NUMERIC );
 
-			foreach ( $terms as $term_id ) {
-				$sheet_id = (int) get_term_meta( (int) $term_id, 'palaplast_technical_sheet_id', true );
+			$candidates = array();
 
-				if ( ! $sheet_id || ! isset( $sheets[ $sheet_id ] ) ) {
+			foreach ( $terms as $index => $term_id ) {
+				$resolved_sheet = $this->resolve_category_sheet( (int) $term_id );
+
+				if ( empty( $resolved_sheet['file_url'] ) ) {
 					continue;
 				}
 
-				$file_url = wp_get_attachment_url( (int) $sheets[ $sheet_id ]['attachment_id'] );
-
-				if ( ! $file_url ) {
-					continue;
-				}
-
-				return array(
-					'name'     => (string) $sheets[ $sheet_id ]['name'],
-					'file_url' => $file_url,
+				$candidates[] = array(
+					'distance' => isset( $resolved_sheet['distance'] ) ? (int) $resolved_sheet['distance'] : PHP_INT_MAX,
+					'order'    => (int) $index,
+					'term_id'  => (int) $term_id,
+					'sheet'    => array(
+						'name'     => (string) $resolved_sheet['name'],
+						'file_url' => (string) $resolved_sheet['file_url'],
+					),
 				);
 			}
 
+			if ( empty( $candidates ) ) {
+				return array();
+			}
+
+			usort(
+				$candidates,
+				static function ( $a, $b ) {
+					if ( $a['distance'] !== $b['distance'] ) {
+						return $a['distance'] <=> $b['distance'];
+					}
+
+					if ( $a['order'] !== $b['order'] ) {
+						return $a['order'] <=> $b['order'];
+					}
+
+					return $a['term_id'] <=> $b['term_id'];
+				}
+			);
+
+			return $candidates[0]['sheet'];
+		}
+
+		/**
+		 * Resolve category sheet using direct selection or nearest parent inheritance.
+		 *
+		 * @param int $term_id Category ID.
+		 *
+		 * @return array{name:string,file_url:string,distance:int,sheet_id:int}
+		 */
+		private function resolve_category_sheet( $term_id ) {
+			$term = get_term( $term_id, 'product_cat' );
+
+			if ( ! $term instanceof WP_Term ) {
+				return array();
+			}
+
+			$sheets        = $this->get_technical_sheets();
+			$current_term  = $term;
+			$distance      = 0;
+
+			while ( $current_term instanceof WP_Term && 'product_cat' === $current_term->taxonomy ) {
+				$sheet_id = (int) get_term_meta( (int) $current_term->term_id, 'palaplast_technical_sheet_id', true );
+
+				if ( $sheet_id && isset( $sheets[ $sheet_id ] ) ) {
+					$file_url = ! empty( $sheets[ $sheet_id ]['attachment_id'] ) ? wp_get_attachment_url( (int) $sheets[ $sheet_id ]['attachment_id'] ) : '';
+
+					if ( $file_url ) {
+						return array(
+							'name'     => (string) $sheets[ $sheet_id ]['name'],
+							'file_url' => (string) $file_url,
+							'distance' => $distance,
+							'sheet_id' => $sheet_id,
+						);
+					}
+				}
+
+				if ( empty( $current_term->parent ) ) {
+					break;
+				}
+
+				$current_term = get_term( (int) $current_term->parent, 'product_cat' );
+				++$distance;
+			}
+
 			return array();
+		}
+
+		/**
+		 * Get inherited sheet only (ignoring term's direct selection).
+		 *
+		 * @param int $term_id Category ID.
+		 *
+		 * @return array{name:string,file_url:string,distance:int,sheet_id:int}
+		 */
+		private function get_category_inherited_sheet( $term_id ) {
+			$term = get_term( $term_id, 'product_cat' );
+
+			if ( ! $term instanceof WP_Term || empty( $term->parent ) ) {
+				return array();
+			}
+
+			return $this->resolve_category_sheet( (int) $term->parent );
+		}
+
+		/**
+		 * Get sheet name helper.
+		 *
+		 * @param int $sheet_id Technical sheet ID.
+		 *
+		 * @return string
+		 */
+		private function get_sheet_name_by_id( $sheet_id ) {
+			$sheets = $this->get_technical_sheets();
+
+			if ( empty( $sheets[ $sheet_id ]['name'] ) ) {
+				return '';
+			}
+
+			return (string) $sheets[ $sheet_id ]['name'];
 		}
 
 		/**
