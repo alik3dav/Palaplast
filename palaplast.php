@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Palaplast
  * Description: Displays a clean, compact variation matrix (SKU + attributes + price) above the product tabs for variable WooCommerce products.
- * Version: 1.7.0
+ * Version: 1.8.0
  * Author: Palaplast
  * License: GPL-2.0-or-later
  * Text Domain: palaplast
@@ -56,6 +56,7 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 
 			add_action( 'woocommerce_after_single_product_summary', array( $this, 'render_matrix_table' ), 4 );
 			add_action( 'woocommerce_single_product_summary', array( $this, 'render_technical_sheet_button' ), 35 );
+			add_action( 'woocommerce_single_product_summary', array( $this, 'render_pricelist_button' ), 36 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
 			add_filter( 'woocommerce_hide_invisible_variations', array( $this, 'show_variations_without_price' ), 10, 3 );
 			add_filter( 'woocommerce_get_price_html', array( $this, 'hide_catalog_prices' ), 10, 2 );
@@ -65,13 +66,20 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 
 			if ( is_admin() ) {
 				add_action( 'admin_menu', array( $this, 'register_technical_sheets_menu' ) );
+				add_action( 'admin_menu', array( $this, 'register_pricelists_menu' ) );
 				add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 				add_action( 'admin_post_palaplast_save_sheet', array( $this, 'handle_save_sheet' ) );
 				add_action( 'admin_post_palaplast_delete_sheet', array( $this, 'handle_delete_sheet' ) );
+				add_action( 'admin_post_palaplast_save_pricelist', array( $this, 'handle_save_pricelist' ) );
+				add_action( 'admin_post_palaplast_delete_pricelist', array( $this, 'handle_delete_pricelist' ) );
 				add_action( 'product_cat_add_form_fields', array( $this, 'render_category_sheet_add_field' ) );
 				add_action( 'product_cat_edit_form_fields', array( $this, 'render_category_sheet_edit_field' ) );
+				add_action( 'product_cat_add_form_fields', array( $this, 'render_category_pricelist_add_field' ) );
+				add_action( 'product_cat_edit_form_fields', array( $this, 'render_category_pricelist_edit_field' ) );
 				add_action( 'created_product_cat', array( $this, 'save_category_sheet' ) );
 				add_action( 'edited_product_cat', array( $this, 'save_category_sheet' ) );
+				add_action( 'created_product_cat', array( $this, 'save_category_pricelist' ) );
+				add_action( 'edited_product_cat', array( $this, 'save_category_pricelist' ) );
 			}
 		}
 
@@ -85,7 +93,7 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 				return;
 			}
 
-			wp_register_style( 'palaplast', false, array(), '1.7.0' );
+			wp_register_style( 'palaplast', false, array(), '1.8.0' );
 			wp_enqueue_style( 'palaplast' );
 			wp_add_inline_style( 'palaplast', $this->get_styles() );
 		}
@@ -365,6 +373,37 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			<?php
 		}
 
+
+		/**
+		 * Render "Download Pricelist" button on single product pages.
+		 *
+		 * @return void
+		 */
+		public function render_pricelist_button() {
+			if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+				return;
+			}
+
+			global $product;
+
+			if ( ! $product instanceof WC_Product ) {
+				return;
+			}
+
+			$pricelist = $this->get_product_pricelist( $product->get_id() );
+
+			if ( empty( $pricelist['file_url'] ) ) {
+				return;
+			}
+			?>
+			<p class="palaplast-pricelist">
+				<a class="button palaplast-pricelist-button" href="<?php echo esc_url( $pricelist['file_url'] ); ?>" target="_blank" rel="noopener noreferrer">
+					<?php esc_html_e( 'Download Pricelist', 'palaplast' ); ?>
+				</a>
+			</p>
+			<?php
+		}
+
 		/**
 		 * Register the Technical Sheets admin menu.
 		 *
@@ -381,6 +420,23 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			);
 		}
 
+
+		/**
+		 * Register the Pricelists admin menu.
+		 *
+		 * @return void
+		 */
+		public function register_pricelists_menu() {
+			add_submenu_page(
+				'woocommerce',
+				__( 'Pricelists', 'palaplast' ),
+				__( 'Pricelists', 'palaplast' ),
+				'manage_woocommerce',
+				'palaplast-pricelists',
+				array( $this, 'render_pricelists_page' )
+			);
+		}
+
 		/**
 		 * Enqueue admin assets for the Technical Sheets page.
 		 *
@@ -389,14 +445,18 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 		 * @return void
 		 */
 		public function enqueue_admin_assets( $hook_suffix ) {
-			if ( 'woocommerce_page_palaplast-technical-sheets' !== $hook_suffix ) {
+			if ( ! in_array( $hook_suffix, array( 'woocommerce_page_palaplast-technical-sheets', 'woocommerce_page_palaplast-pricelists' ), true ) ) {
 				return;
 			}
+
+			$selection_title = 'woocommerce_page_palaplast-pricelists' === $hook_suffix
+				? __( 'Select Pricelist PDF', 'palaplast' )
+				: __( 'Select Technical Sheet PDF', 'palaplast' );
 
 			wp_enqueue_media();
 			wp_add_inline_script(
 				'jquery-core',
-				"jQuery(function($){var frame;$('.palaplast-select-pdf').on('click',function(e){e.preventDefault();if(frame){frame.open();return;}frame=wp.media({title:'" . esc_js( __( 'Select Technical Sheet PDF', 'palaplast' ) ) . "',button:{text:'" . esc_js( __( 'Use PDF', 'palaplast' ) ) . "'},library:{type:'application/pdf'},multiple:false});frame.on('select',function(){var attachment=frame.state().get('selection').first().toJSON();$('#palaplast_attachment_id').val(attachment.id);$('.palaplast-selected-file').text(attachment.filename || attachment.url);});frame.open();});$('.palaplast-remove-pdf').on('click',function(e){e.preventDefault();$('#palaplast_attachment_id').val('');$('.palaplast-selected-file').text('" . esc_js( __( 'No file selected.', 'palaplast' ) ) . "');});});"
+				"jQuery(function($){var frame;$('.palaplast-select-pdf').on('click',function(e){e.preventDefault();if(frame){frame.open();return;}frame=wp.media({title:'" . esc_js( $selection_title ) . "',button:{text:'" . esc_js( __( 'Use PDF', 'palaplast' ) ) . "'},library:{type:'application/pdf'},multiple:false});frame.on('select',function(){var attachment=frame.state().get('selection').first().toJSON();$('#palaplast_attachment_id').val(attachment.id);$('.palaplast-selected-file').text(attachment.filename || attachment.url);});frame.open();});$('.palaplast-remove-pdf').on('click',function(e){e.preventDefault();$('#palaplast_attachment_id').val('');$('.palaplast-selected-file').text('" . esc_js( __( 'No file selected.', 'palaplast' ) ) . "');});});"
 			);
 		}
 
@@ -520,6 +580,121 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			<?php
 		}
 
+
+		/**
+		 * Render Pricelists admin page.
+		 *
+		 * @return void
+		 */
+		public function render_pricelists_page() {
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				return;
+			}
+
+			$pricelists = $this->get_pricelists();
+			$edit_id    = isset( $_GET['edit_pricelist'] ) ? absint( wp_unslash( $_GET['edit_pricelist'] ) ) : 0;
+			$pricelist  = ( $edit_id && isset( $pricelists[ $edit_id ] ) ) ? $pricelists[ $edit_id ] : array();
+			?>
+			<div class="wrap">
+				<h1><?php esc_html_e( 'Pricelists', 'palaplast' ); ?></h1>
+
+				<?php if ( isset( $_GET['pricelist_updated'] ) ) : ?>
+					<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Pricelist saved.', 'palaplast' ); ?></p></div>
+				<?php endif; ?>
+
+				<?php if ( isset( $_GET['pricelist_deleted'] ) ) : ?>
+					<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Pricelist deleted.', 'palaplast' ); ?></p></div>
+				<?php endif; ?>
+
+				<div class="card" style="max-width:780px;padding:20px;margin-top:20px;">
+					<h2 style="margin-top:0;"><?php echo $edit_id ? esc_html__( 'Edit Pricelist', 'palaplast' ) : esc_html__( 'Add Pricelist', 'palaplast' ); ?></h2>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<?php wp_nonce_field( 'palaplast_save_pricelist' ); ?>
+						<input type="hidden" name="action" value="palaplast_save_pricelist" />
+						<input type="hidden" name="pricelist_id" value="<?php echo esc_attr( $edit_id ); ?>" />
+
+						<table class="form-table" role="presentation">
+							<tr>
+								<th scope="row"><label for="palaplast_sheet_name"><?php esc_html_e( 'Name', 'palaplast' ); ?></label></th>
+								<td><input type="text" class="regular-text" id="palaplast_sheet_name" name="sheet_name" required value="<?php echo esc_attr( isset( $pricelist['name'] ) ? $pricelist['name'] : '' ); ?>" /></td>
+							</tr>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'PDF file', 'palaplast' ); ?></th>
+								<td>
+									<?php $current_attachment = isset( $pricelist['attachment_id'] ) ? (int) $pricelist['attachment_id'] : 0; ?>
+									<input type="hidden" id="palaplast_attachment_id" name="attachment_id" value="<?php echo esc_attr( $current_attachment ); ?>" />
+									<button type="button" class="button palaplast-select-pdf"><?php esc_html_e( 'Select PDF', 'palaplast' ); ?></button>
+									<button type="button" class="button palaplast-remove-pdf"><?php esc_html_e( 'Remove', 'palaplast' ); ?></button>
+									<p class="description palaplast-selected-file" style="margin-top:8px;">
+										<?php echo $current_attachment ? esc_html( basename( (string) get_attached_file( $current_attachment ) ) ) : esc_html__( 'No file selected.', 'palaplast' ); ?>
+									</p>
+								</td>
+							</tr>
+						</table>
+
+						<?php submit_button( $edit_id ? __( 'Update Pricelist', 'palaplast' ) : __( 'Add Pricelist', 'palaplast' ) ); ?>
+					</form>
+				</div>
+
+				<h2 style="margin-top:30px;"><?php esc_html_e( 'All Pricelists', 'palaplast' ); ?></h2>
+				<table class="widefat striped" style="max-width:980px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Name', 'palaplast' ); ?></th>
+							<th><?php esc_html_e( 'PDF File', 'palaplast' ); ?></th>
+							<th><?php esc_html_e( 'Date', 'palaplast' ); ?></th>
+							<th><?php esc_html_e( 'Actions', 'palaplast' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php if ( empty( $pricelists ) ) : ?>
+							<tr><td colspan="4"><?php esc_html_e( 'No pricelists found.', 'palaplast' ); ?></td></tr>
+						<?php else : ?>
+							<?php foreach ( $pricelists as $pricelist_id => $pricelist_data ) : ?>
+								<?php
+								$file_url  = ! empty( $pricelist_data['attachment_id'] ) ? wp_get_attachment_url( (int) $pricelist_data['attachment_id'] ) : '';
+								$file_name = ! empty( $pricelist_data['attachment_id'] ) ? basename( (string) get_attached_file( (int) $pricelist_data['attachment_id'] ) ) : '';
+								$edit_url  = add_query_arg(
+									array(
+										'page'           => 'palaplast-pricelists',
+										'edit_pricelist' => $pricelist_id,
+									),
+									admin_url( 'admin.php' )
+								);
+								$delete_url = wp_nonce_url(
+									add_query_arg(
+										array(
+											'action'       => 'palaplast_delete_pricelist',
+											'pricelist_id' => $pricelist_id,
+										),
+										admin_url( 'admin-post.php' )
+									),
+									'palaplast_delete_pricelist_' . $pricelist_id
+								);
+								?>
+								<tr>
+									<td><?php echo esc_html( isset( $pricelist_data['name'] ) ? $pricelist_data['name'] : '' ); ?></td>
+									<td>
+										<?php if ( $file_url ) : ?>
+											<a href="<?php echo esc_url( $file_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $file_name ? $file_name : $file_url ); ?></a>
+										<?php else : ?>
+											<?php esc_html_e( 'No file', 'palaplast' ); ?>
+										<?php endif; ?>
+									</td>
+									<td><?php echo ! empty( $pricelist_data['created_at'] ) ? esc_html( date_i18n( get_option( 'date_format' ), strtotime( $pricelist_data['created_at'] ) ) ) : ''; ?></td>
+									<td>
+										<a class="button button-small" href="<?php echo esc_url( $edit_url ); ?>"><?php esc_html_e( 'Edit', 'palaplast' ); ?></a>
+										<a class="button button-small" href="<?php echo esc_url( $delete_url ); ?>" onclick="return confirm('<?php echo esc_js( __( 'Delete this pricelist?', 'palaplast' ) ); ?>');"><?php esc_html_e( 'Delete', 'palaplast' ); ?></a>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</tbody>
+				</table>
+			</div>
+			<?php
+		}
+
 		/**
 		 * Save a technical sheet.
 		 *
@@ -592,6 +767,79 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			exit;
 		}
 
+
+		/**
+		 * Save a pricelist.
+		 *
+		 * @return void
+		 */
+		public function handle_save_pricelist() {
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				wp_die( esc_html__( 'Permission denied.', 'palaplast' ) );
+			}
+
+			check_admin_referer( 'palaplast_save_pricelist' );
+
+			$pricelist_id  = isset( $_POST['pricelist_id'] ) ? absint( wp_unslash( $_POST['pricelist_id'] ) ) : 0;
+			$pricelist_name = isset( $_POST['sheet_name'] ) ? sanitize_text_field( wp_unslash( $_POST['sheet_name'] ) ) : '';
+			$attachment_id = isset( $_POST['attachment_id'] ) ? absint( wp_unslash( $_POST['attachment_id'] ) ) : 0;
+
+			if ( '' === $pricelist_name || ! $this->is_valid_pdf_attachment( $attachment_id ) ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=palaplast-pricelists' ) );
+				exit;
+			}
+
+			$pricelists = $this->get_pricelists();
+
+			if ( $pricelist_id && isset( $pricelists[ $pricelist_id ] ) ) {
+				$pricelists[ $pricelist_id ]['name']          = $pricelist_name;
+				$pricelists[ $pricelist_id ]['attachment_id'] = $attachment_id;
+			} else {
+				$pricelist_id                 = time() + wp_rand( 1, 999 );
+				$pricelists[ $pricelist_id ]  = array(
+					'name'          => $pricelist_name,
+					'attachment_id' => $attachment_id,
+					'created_at'    => current_time( 'mysql' ),
+				);
+			}
+
+			update_option( 'palaplast_pricelists', $pricelists, false );
+
+			wp_safe_redirect( admin_url( 'admin.php?page=palaplast-pricelists&pricelist_updated=1' ) );
+			exit;
+		}
+
+		/**
+		 * Delete a pricelist and clear category references.
+		 *
+		 * @return void
+		 */
+		public function handle_delete_pricelist() {
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				wp_die( esc_html__( 'Permission denied.', 'palaplast' ) );
+			}
+
+			$pricelist_id = isset( $_GET['pricelist_id'] ) ? absint( wp_unslash( $_GET['pricelist_id'] ) ) : 0;
+
+			if ( ! $pricelist_id ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=palaplast-pricelists' ) );
+				exit;
+			}
+
+			check_admin_referer( 'palaplast_delete_pricelist_' . $pricelist_id );
+
+			$pricelists = $this->get_pricelists();
+
+			if ( isset( $pricelists[ $pricelist_id ] ) ) {
+				unset( $pricelists[ $pricelist_id ] );
+				update_option( 'palaplast_pricelists', $pricelists, false );
+				$this->clear_pricelist_from_categories( $pricelist_id );
+			}
+
+			wp_safe_redirect( admin_url( 'admin.php?page=palaplast-pricelists&pricelist_deleted=1' ) );
+			exit;
+		}
+
 		/**
 		 * Render the technical sheet selector on category create form.
 		 *
@@ -639,6 +887,54 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			<?php
 		}
 
+
+		/**
+		 * Render the pricelist selector on category create form.
+		 *
+		 * @return void
+		 */
+		public function render_category_pricelist_add_field() {
+			?>
+			<div class="form-field term-palaplast-pricelist-wrap">
+				<label for="palaplast_pricelist_id"><?php esc_html_e( 'Pricelist PDF', 'palaplast' ); ?></label>
+				<?php $this->render_category_pricelist_dropdown( 0 ); ?>
+				<p><?php esc_html_e( 'Select a pricelist PDF for this category.', 'palaplast' ); ?></p>
+			</div>
+			<?php
+		}
+
+		/**
+		 * Render the pricelist selector on category edit form.
+		 *
+		 * @param WP_Term $term Category term.
+		 *
+		 * @return void
+		 */
+		public function render_category_pricelist_edit_field( $term ) {
+			$pricelist_id       = (int) get_term_meta( $term->term_id, 'palaplast_pricelist_id', true );
+			$inherited_pricelist = $this->get_category_inherited_pricelist( (int) $term->term_id );
+			$inherited_name      = '';
+
+			if ( ! empty( $inherited_pricelist['name'] ) ) {
+				$inherited_name = (string) $inherited_pricelist['name'];
+			}
+			?>
+			<tr class="form-field term-palaplast-pricelist-wrap">
+				<th scope="row"><label for="palaplast_pricelist_id"><?php esc_html_e( 'Pricelist PDF', 'palaplast' ); ?></label></th>
+				<td>
+					<?php $this->render_category_pricelist_dropdown( $pricelist_id ); ?>
+					<p class="description"><?php esc_html_e( 'Select a pricelist PDF for this category.', 'palaplast' ); ?></p>
+					<p class="description"><strong><?php esc_html_e( 'Selected Pricelist:', 'palaplast' ); ?></strong>
+						<?php echo $pricelist_id ? esc_html( $this->get_pricelist_name_by_id( $pricelist_id ) ) : esc_html__( 'None', 'palaplast' ); ?>
+					</p>
+					<p class="description"><strong><?php esc_html_e( 'Inherited Pricelist:', 'palaplast' ); ?></strong>
+						<?php echo $inherited_name ? esc_html( $inherited_name ) : esc_html__( 'None', 'palaplast' ); ?>
+					</p>
+				</td>
+			</tr>
+			<?php
+		}
+
 		/**
 		 * Save selected technical sheet in category term meta.
 		 *
@@ -665,6 +961,33 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			}
 		}
 
+
+		/**
+		 * Save selected pricelist in category term meta.
+		 *
+		 * @param int $term_id Category ID.
+		 *
+		 * @return void
+		 */
+		public function save_category_pricelist( $term_id ) {
+			if ( ! isset( $_POST['palaplast_pricelist_id'] ) ) {
+				return;
+			}
+
+			$pricelist_id = absint( wp_unslash( $_POST['palaplast_pricelist_id'] ) );
+			$pricelists   = $this->get_pricelists();
+
+			if ( $pricelist_id && ! isset( $pricelists[ $pricelist_id ] ) ) {
+				$pricelist_id = 0;
+			}
+
+			if ( $pricelist_id ) {
+				update_term_meta( $term_id, 'palaplast_pricelist_id', $pricelist_id );
+			} else {
+				delete_term_meta( $term_id, 'palaplast_pricelist_id' );
+			}
+		}
+
 		/**
 		 * Render technical sheet dropdown helper.
 		 *
@@ -680,6 +1003,28 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 				<?php foreach ( $sheets as $sheet_id => $sheet ) : ?>
 					<option value="<?php echo esc_attr( $sheet_id ); ?>" <?php selected( (int) $selected_id, (int) $sheet_id ); ?>>
 						<?php echo esc_html( isset( $sheet['name'] ) ? $sheet['name'] : '' ); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+			<?php
+		}
+
+
+		/**
+		 * Render pricelist dropdown helper.
+		 *
+		 * @param int $selected_id Selected pricelist ID.
+		 *
+		 * @return void
+		 */
+		private function render_category_pricelist_dropdown( $selected_id ) {
+			$pricelists = $this->get_pricelists();
+			?>
+			<select name="palaplast_pricelist_id" id="palaplast_pricelist_id">
+				<option value="0"><?php esc_html_e( '— None —', 'palaplast' ); ?></option>
+				<?php foreach ( $pricelists as $pricelist_id => $pricelist ) : ?>
+					<option value="<?php echo esc_attr( $pricelist_id ); ?>" <?php selected( (int) $selected_id, (int) $pricelist_id ); ?>>
+						<?php echo esc_html( isset( $pricelist['name'] ) ? $pricelist['name'] : '' ); ?>
 					</option>
 				<?php endforeach; ?>
 			</select>
@@ -744,6 +1089,65 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			return $candidates[0]['sheet'];
 		}
 
+
+		/**
+		 * Get pricelist for a product based on assigned categories.
+		 *
+		 * @param int $product_id Product ID.
+		 *
+		 * @return array{name:string,file_url:string}
+		 */
+		private function get_product_pricelist( $product_id ) {
+			$terms = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'ids' ) );
+
+			if ( empty( $terms ) || is_wp_error( $terms ) ) {
+				return array();
+			}
+
+			sort( $terms, SORT_NUMERIC );
+
+			$candidates = array();
+
+			foreach ( $terms as $index => $term_id ) {
+				$resolved_pricelist = $this->resolve_category_pricelist( (int) $term_id );
+
+				if ( empty( $resolved_pricelist['file_url'] ) ) {
+					continue;
+				}
+
+				$candidates[] = array(
+					'distance'  => isset( $resolved_pricelist['distance'] ) ? (int) $resolved_pricelist['distance'] : PHP_INT_MAX,
+					'order'     => (int) $index,
+					'term_id'   => (int) $term_id,
+					'pricelist' => array(
+						'name'     => (string) $resolved_pricelist['name'],
+						'file_url' => (string) $resolved_pricelist['file_url'],
+					),
+				);
+			}
+
+			if ( empty( $candidates ) ) {
+				return array();
+			}
+
+			usort(
+				$candidates,
+				static function ( $a, $b ) {
+					if ( $a['distance'] !== $b['distance'] ) {
+						return $a['distance'] <=> $b['distance'];
+					}
+
+					if ( $a['order'] !== $b['order'] ) {
+						return $a['order'] <=> $b['order'];
+					}
+
+					return $a['term_id'] <=> $b['term_id'];
+				}
+			);
+
+			return $candidates[0]['pricelist'];
+		}
+
 		/**
 		 * Resolve category sheet using direct selection or nearest parent inheritance.
 		 *
@@ -789,6 +1193,52 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			return array();
 		}
 
+
+		/**
+		 * Resolve category pricelist using direct selection or nearest parent inheritance.
+		 *
+		 * @param int $term_id Category ID.
+		 *
+		 * @return array{name:string,file_url:string,distance:int,pricelist_id:int}
+		 */
+		private function resolve_category_pricelist( $term_id ) {
+			$term = get_term( $term_id, 'product_cat' );
+
+			if ( ! $term instanceof WP_Term ) {
+				return array();
+			}
+
+			$pricelists   = $this->get_pricelists();
+			$current_term = $term;
+			$distance     = 0;
+
+			while ( $current_term instanceof WP_Term && 'product_cat' === $current_term->taxonomy ) {
+				$pricelist_id = (int) get_term_meta( (int) $current_term->term_id, 'palaplast_pricelist_id', true );
+
+				if ( $pricelist_id && isset( $pricelists[ $pricelist_id ] ) ) {
+					$file_url = ! empty( $pricelists[ $pricelist_id ]['attachment_id'] ) ? wp_get_attachment_url( (int) $pricelists[ $pricelist_id ]['attachment_id'] ) : '';
+
+					if ( $file_url ) {
+						return array(
+							'name'         => (string) $pricelists[ $pricelist_id ]['name'],
+							'file_url'     => (string) $file_url,
+							'distance'     => $distance,
+							'pricelist_id' => $pricelist_id,
+						);
+					}
+				}
+
+				if ( empty( $current_term->parent ) ) {
+					break;
+				}
+
+				$current_term = get_term( (int) $current_term->parent, 'product_cat' );
+				++$distance;
+			}
+
+			return array();
+		}
+
 		/**
 		 * Get inherited sheet only (ignoring term's direct selection).
 		 *
@@ -804,6 +1254,24 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			}
 
 			return $this->resolve_category_sheet( (int) $term->parent );
+		}
+
+
+		/**
+		 * Get inherited pricelist only (ignoring term's direct selection).
+		 *
+		 * @param int $term_id Category ID.
+		 *
+		 * @return array{name:string,file_url:string,distance:int,pricelist_id:int}
+		 */
+		private function get_category_inherited_pricelist( $term_id ) {
+			$term = get_term( $term_id, 'product_cat' );
+
+			if ( ! $term instanceof WP_Term || empty( $term->parent ) ) {
+				return array();
+			}
+
+			return $this->resolve_category_pricelist( (int) $term->parent );
 		}
 
 		/**
@@ -823,6 +1291,24 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			return (string) $sheets[ $sheet_id ]['name'];
 		}
 
+
+		/**
+		 * Get pricelist name helper.
+		 *
+		 * @param int $pricelist_id Pricelist ID.
+		 *
+		 * @return string
+		 */
+		private function get_pricelist_name_by_id( $pricelist_id ) {
+			$pricelists = $this->get_pricelists();
+
+			if ( empty( $pricelists[ $pricelist_id ]['name'] ) ) {
+				return '';
+			}
+
+			return (string) $pricelists[ $pricelist_id ]['name'];
+		}
+
 		/**
 		 * Get all stored technical sheets.
 		 *
@@ -832,6 +1318,18 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			$sheets = get_option( 'palaplast_technical_sheets', array() );
 
 			return is_array( $sheets ) ? $sheets : array();
+		}
+
+
+		/**
+		 * Get all stored pricelists.
+		 *
+		 * @return array<int,array<string,mixed>>
+		 */
+		private function get_pricelists() {
+			$pricelists = get_option( 'palaplast_pricelists', array() );
+
+			return is_array( $pricelists ) ? $pricelists : array();
 		}
 
 		/**
@@ -881,13 +1379,43 @@ if ( ! class_exists( 'Palaplast_Variation_Matrix' ) ) {
 			}
 		}
 
+
+		/**
+		 * Remove pricelist selections from all categories when a pricelist is deleted.
+		 *
+		 * @param int $pricelist_id Pricelist ID.
+		 *
+		 * @return void
+		 */
+		private function clear_pricelist_from_categories( $pricelist_id ) {
+			$terms = get_terms(
+				array(
+					'taxonomy'   => 'product_cat',
+					'hide_empty' => false,
+					'fields'     => 'ids',
+				)
+			);
+
+			if ( is_wp_error( $terms ) || empty( $terms ) ) {
+				return;
+			}
+
+			foreach ( $terms as $term_id ) {
+				$current_pricelist = (int) get_term_meta( (int) $term_id, 'palaplast_pricelist_id', true );
+
+				if ( $current_pricelist === (int) $pricelist_id ) {
+					delete_term_meta( (int) $term_id, 'palaplast_pricelist_id' );
+				}
+			}
+		}
+
 		/**
 		 * Plugin styles.
 		 *
 		 * @return string
 		 */
 		private function get_styles() {
-			return '.palaplast-matrix{margin-top:10px;margin-bottom:30px}.palaplast-title{font-size:14px;font-weight:500;margin-bottom:10px;color:#222}.palaplast-table-wrap{overflow-x:auto}.palaplast-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4}.palaplast-table th,.palaplast-table td{border-bottom:1px solid #eee;padding:6px 10px;vertical-align:middle;white-space:nowrap}.palaplast-table .col-sku{text-align:left}.palaplast-table .col-attr{text-align:center}.palaplast-table th{font-weight:600;color:#333;background:#fafafa}.palaplast-table tr:last-child td{border-bottom:none}.palaplast-technical-sheet{margin:16px 0 0}.palaplast-technical-sheet-button.button{display:inline-flex;align-items:center;gap:6px}@media (max-width:768px){.palaplast-table{font-size:12px}.palaplast-table th,.palaplast-table td{padding:5px 6px}}';
+			return '.palaplast-matrix{margin-top:10px;margin-bottom:30px}.palaplast-title{font-size:14px;font-weight:500;margin-bottom:10px;color:#222}.palaplast-table-wrap{overflow-x:auto}.palaplast-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4}.palaplast-table th,.palaplast-table td{border-bottom:1px solid #eee;padding:6px 10px;vertical-align:middle;white-space:nowrap}.palaplast-table .col-sku{text-align:left}.palaplast-table .col-attr{text-align:center}.palaplast-table th{font-weight:600;color:#333;background:#fafafa}.palaplast-table tr:last-child td{border-bottom:none}.palaplast-technical-sheet,.palaplast-pricelist{margin:16px 0 0}.palaplast-technical-sheet-button.button,.palaplast-pricelist-button.button{display:inline-flex;align-items:center;gap:6px}@media (max-width:768px){.palaplast-table{font-size:12px}.palaplast-table th,.palaplast-table td{padding:5px 6px}}';
 		}
 	}
 

@@ -4,7 +4,7 @@ Tags: woocommerce, variations, table, matrix, products
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.6.2
+Stable tag: 1.8.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,12 @@ Palaplast displays a compact variation matrix for WooCommerce variable products 
 3. Open a variable product page to confirm the matrix appears above product tabs.
 
 == Changelog ==
+
+= 1.8.0 =
+* Added a new Pricelists feature with dedicated admin CRUD screen (Name + PDF) under WooCommerce.
+* Added category-level Pricelist PDF assignment with parent-category inheritance and read-only selected/inherited indicators.
+* Added frontend "Download Pricelist" button on product pages with deterministic category resolution for multi-category products.
+* Deleting a pricelist now clears category references so inheritance can fall back automatically.
 
 = 1.6.2 =
 * Declared compatibility with WooCommerce custom order tables (HPOS) and Cart/Checkout blocks to prevent false incompatible plugin notices.
