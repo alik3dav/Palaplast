@@ -323,19 +323,25 @@ function palaplast_render_events_shortcode( $atts ) {
 	$defaults = array(
 		'posts_per_page' => 10,
 		'show_excerpt'   => 'true',
+		'type'           => 'event',
 	);
 
 	$atts = shortcode_atts( $defaults, $atts, 'palaplast_events' );
 
-	$events_query = new WP_Query(
-		array(
-			'post_type'           => 'event',
-			'post_status'         => 'publish',
-			'posts_per_page'      => max( 1, (int) $atts['posts_per_page'] ),
-			'ignore_sticky_posts' => true,
-			'palaplast_event_sort' => true,
-		)
+	$post_type = sanitize_key( (string) $atts['type'] );
+	if ( 'event' !== $post_type ) {
+		$post_type = 'event';
+	}
+
+	$query_args = array(
+		'post_type'            => $post_type,
+		'post_status'          => 'publish',
+		'posts_per_page'       => max( 1, (int) $atts['posts_per_page'] ),
+		'ignore_sticky_posts'  => true,
+		'palaplast_event_sort' => true,
 	);
+
+	$events_query = new WP_Query( $query_args );
 
 	if ( ! $events_query->have_posts() ) {
 		return '<div class="palaplast-events-page"><p>' . esc_html__( 'No events found.', 'palaplast' ) . '</p></div>';
