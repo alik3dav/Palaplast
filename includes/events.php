@@ -7,6 +7,7 @@ define( 'PALAPLAST_EVENT_START_META_KEY', '_palaplast_event_start_date' );
 define( 'PALAPLAST_EVENT_END_META_KEY', '_palaplast_event_end_date' );
 
 add_action( 'init', 'palaplast_register_event_post_type' );
+add_action( 'init', 'palaplast_register_event_type_taxonomy' );
 add_action( 'add_meta_boxes', 'palaplast_register_event_meta_box' );
 add_action( 'save_post_event', 'palaplast_save_event_meta', 10, 2 );
 add_action( 'admin_notices', 'palaplast_render_event_admin_notice' );
@@ -50,6 +51,34 @@ function palaplast_register_event_post_type() {
 			'show_in_rest'    => true,
 			'menu_position'   => 25,
 			'menu_icon'       => 'dashicons-calendar-alt',
+		)
+	);
+}
+
+function palaplast_register_event_type_taxonomy() {
+	$labels = array(
+		'name'              => __( 'Event Types', 'palaplast' ),
+		'singular_name'     => __( 'Event Type', 'palaplast' ),
+		'search_items'      => __( 'Search Event Types', 'palaplast' ),
+		'all_items'         => __( 'All Event Types', 'palaplast' ),
+		'edit_item'         => __( 'Edit Event Type', 'palaplast' ),
+		'update_item'       => __( 'Update Event Type', 'palaplast' ),
+		'add_new_item'      => __( 'Add New Event Type', 'palaplast' ),
+		'new_item_name'     => __( 'New Event Type Name', 'palaplast' ),
+		'menu_name'         => __( 'Event Types', 'palaplast' ),
+	);
+
+	register_taxonomy(
+		'event_type',
+		array( 'event' ),
+		array(
+			'labels'            => $labels,
+			'public'            => true,
+			'hierarchical'      => true,
+			'show_ui'           => true,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rewrite'           => array( 'slug' => 'event-type' ),
 		)
 	);
 }
@@ -323,19 +352,34 @@ function palaplast_render_events_shortcode( $atts ) {
 	$defaults = array(
 		'posts_per_page' => 10,
 		'show_excerpt'   => 'true',
+		'event_type'     => '',
 	);
 
 	$atts = shortcode_atts( $defaults, $atts, 'palaplast_events' );
 
-	$events_query = new WP_Query(
-		array(
-			'post_type'           => 'event',
-			'post_status'         => 'publish',
-			'posts_per_page'      => max( 1, (int) $atts['posts_per_page'] ),
-			'ignore_sticky_posts' => true,
-			'palaplast_event_sort' => true,
-		)
+	$event_type_terms = array_filter(
+		array_map( 'sanitize_title', array_map( 'trim', explode( ',', (string) $atts['event_type'] ) ) )
 	);
+
+	$query_args = array(
+		'post_type'            => 'event',
+		'post_status'          => 'publish',
+		'posts_per_page'       => max( 1, (int) $atts['posts_per_page'] ),
+		'ignore_sticky_posts'  => true,
+		'palaplast_event_sort' => true,
+	);
+
+	if ( ! empty( $event_type_terms ) ) {
+		$query_args['tax_query'] = array(
+			array(
+				'taxonomy' => 'event_type',
+				'field'    => 'slug',
+				'terms'    => $event_type_terms,
+			),
+		);
+	}
+
+	$events_query = new WP_Query( $query_args );
 
 	if ( ! $events_query->have_posts() ) {
 		return '<div class="palaplast-events-page"><p>' . esc_html__( 'No events found.', 'palaplast' ) . '</p></div>';
