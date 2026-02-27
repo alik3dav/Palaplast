@@ -34,6 +34,8 @@ function palaplast_declare_woocommerce_compatibility() {
 }
 
 function palaplast_init() {
+	require_once PALAPLAST_PLUGIN_DIR . 'includes/events.php';
+
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return;
 	}
