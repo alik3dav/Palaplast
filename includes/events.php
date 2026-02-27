@@ -17,6 +17,7 @@ add_filter( 'the_content', 'palaplast_render_event_dates_on_single' );
 add_action( 'pre_get_posts', 'palaplast_set_event_admin_default_sort' );
 add_action( 'pre_get_posts', 'palaplast_set_event_archive_default_sort' );
 add_filter( 'posts_clauses', 'palaplast_apply_event_chronological_sort', 10, 2 );
+add_shortcode( 'palaplast_events', 'palaplast_render_events_shortcode' );
 
 function palaplast_register_event_post_type() {
 	$labels = array(
@@ -316,4 +317,58 @@ function palaplast_format_event_datetime( $datetime ) {
 	}
 
 	return wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $timestamp, wp_timezone() );
+}
+
+function palaplast_render_events_shortcode( $atts ) {
+	$defaults = array(
+		'posts_per_page' => 10,
+		'show_excerpt'   => 'true',
+	);
+
+	$atts = shortcode_atts( $defaults, $atts, 'palaplast_events' );
+
+	$events_query = new WP_Query(
+		array(
+			'post_type'           => 'event',
+			'post_status'         => 'publish',
+			'posts_per_page'      => max( 1, (int) $atts['posts_per_page'] ),
+			'ignore_sticky_posts' => true,
+			'palaplast_event_sort' => true,
+		)
+	);
+
+	if ( ! $events_query->have_posts() ) {
+		return '<div class="palaplast-events-page"><p>' . esc_html__( 'No events found.', 'palaplast' ) . '</p></div>';
+	}
+
+	$show_excerpt = 'false' !== strtolower( (string) $atts['show_excerpt'] );
+
+	ob_start();
+	?>
+	<div class="palaplast-events-page">
+		<?php
+		while ( $events_query->have_posts() ) {
+			$events_query->the_post();
+
+			$start = get_post_meta( get_the_ID(), PALAPLAST_EVENT_START_META_KEY, true );
+			$end   = get_post_meta( get_the_ID(), PALAPLAST_EVENT_END_META_KEY, true );
+			?>
+			<article class="palaplast-events-page__item">
+				<h3 class="palaplast-events-page__title"><a href="<?php echo esc_url( get_permalink() ); ?>"><?php the_title(); ?></a></h3>
+				<?php if ( '' !== $start && '' !== $end ) : ?>
+					<div class="palaplast-events-page__dates"><?php echo wp_kses_post( palaplast_get_event_date_range_html( $start, $end ) ); ?></div>
+				<?php endif; ?>
+				<?php if ( $show_excerpt ) : ?>
+					<div class="palaplast-events-page__excerpt"><?php the_excerpt(); ?></div>
+				<?php endif; ?>
+			</article>
+			<?php
+		}
+		?>
+	</div>
+	<?php
+
+	wp_reset_postdata();
+
+	return (string) ob_get_clean();
 }
