@@ -1,0 +1,32 @@
+body.myplugin-no-shop-sidebar #sidebar,
+body.myplugin-no-shop-sidebar .sidebar,
+body.myplugin-no-shop-sidebar .sidebar-container,
+body.myplugin-no-shop-sidebar .shop-sidebar,
+body.myplugin-no-shop-sidebar .woocommerce-sidebar {
+	display: none !important;
+}
+
+body.myplugin-no-shop-sidebar .content-area,
+body.myplugin-no-shop-sidebar .site-content,
+body.myplugin-no-shop-sidebar .main-content,
+body.myplugin-no-shop-sidebar .woocommerce-content,
+body.myplugin-no-shop-sidebar .shop-content,
+body.myplugin-no-shop-sidebar .woocommerce,
+body.myplugin-no-shop-sidebar .woocommerce-page {
+	width: 100% !important;
+	max-width: 100% !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	flex: 0 0 100% !important;
+}
+
+body.myplugin-no-shop-sidebar .woocommerce ul.products,
+body.myplugin-no-shop-sidebar ul.products,
+body.myplugin-no-shop-sidebar .products {
+	width: 100% !important;
+	max-width: 100% !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+}

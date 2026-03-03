@@ -12,34 +12,6 @@ add_filter( 'woocommerce_get_price_html', 'palaplast_hide_catalog_prices', 10, 2
 add_filter( 'woocommerce_available_variation', 'palaplast_remove_variation_price_payload', 10, 3 );
 add_filter( 'woocommerce_show_variation_price', '__return_false' );
 add_filter( 'woocommerce_variation_option_name', 'palaplast_preserve_variation_option_name', 10, 4 );
-add_action( 'template_redirect', 'palaplast_maybe_hide_shop_sidebar', 20 );
-
-function palaplast_maybe_hide_shop_sidebar() {
-	if ( is_admin() || ! is_tax( 'product_cat' ) ) {
-		return;
-	}
-
-	$current_term = get_queried_object();
-	if ( ! $current_term instanceof WP_Term || 'product_cat' !== $current_term->taxonomy ) {
-		return;
-	}
-
-	$child_term_ids = get_terms(
-		array(
-			'taxonomy'   => 'product_cat',
-			'parent'     => (int) $current_term->term_id,
-			'number'     => 1,
-			'fields'     => 'ids',
-			'hide_empty' => false,
-		)
-	);
-
-	if ( is_wp_error( $child_term_ids ) || empty( $child_term_ids ) ) {
-		return;
-	}
-
-	remove_action( 'woocommerce_sidebar', 'woocommerce_get_sidebar', 10 );
-}
 
 function palaplast_render_matrix_table() {
 	global $product;

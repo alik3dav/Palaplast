@@ -54,6 +54,7 @@ function palaplast_init() {
 	}
 
 	require_once PALAPLAST_PLUGIN_DIR . 'public/product-pdf-buttons.php';
+	require_once PALAPLAST_PLUGIN_DIR . 'public/shop-sidebar.php';
 	require_once PALAPLAST_PLUGIN_DIR . 'public/public-init.php';
 }
 
