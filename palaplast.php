@@ -38,8 +38,6 @@ function palaplast_declare_woocommerce_compatibility() {
 }
 
 function palaplast_init() {
-	require_once PALAPLAST_PLUGIN_DIR . 'includes/events.php';
-
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return;
 	}
@@ -60,8 +58,6 @@ function palaplast_init() {
 }
 
 function palaplast_activate() {
-	require_once PALAPLAST_PLUGIN_DIR . 'includes/events.php';
-	palaplast_register_event_post_type();
 	flush_rewrite_rules();
 	update_option( 'palaplast_version', PALAPLAST_VERSION );
 }
