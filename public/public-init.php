@@ -30,7 +30,7 @@ function palaplast_render_matrix_table() {
 		<h4 class="palaplast-title"><?php esc_html_e( 'Product Variations', 'palaplast' ); ?></h4>
 		<div class="palaplast-table-wrap">
 			<table class="palaplast-table" aria-label="<?php esc_attr_e( 'Product variation matrix', 'palaplast' ); ?>">
-				<thead><tr><th scope="col" class="col-sku"><?php esc_html_e( 'SKU', 'palaplast' ); ?></th><?php foreach ( $attributes as $attr_name ) : ?><th scope="col" class="col-attr"><?php echo esc_html( wc_attribute_label( $attr_name ) ); ?></th><?php endforeach; ?></tr></thead>
+				<thead><tr><th scope="col" class="col-sku"><?php esc_html_e( 'SKU', 'palaplast' ); ?></th><?php foreach ( $attributes as $attr_name ) : ?><th scope="col" class="col-attr"><?php echo wp_kses_post( apply_filters( 'palaplast_variation_table_header_html', palaplast_get_variation_header_html( wc_attribute_label( $attr_name ) ), $attr_name ) ); ?></th><?php endforeach; ?></tr></thead>
 				<tbody>
 					<?php foreach ( $available_variations as $variation ) :
 						$variation_id  = isset( $variation['variation_id'] ) ? (int) $variation['variation_id'] : 0;
@@ -51,6 +51,34 @@ function palaplast_render_matrix_table() {
 		</div>
 	</div>
 	<?php
+}
+
+function palaplast_get_variation_header_html( $label ) {
+	$label       = wp_strip_all_tags( (string) $label );
+	$open_pos    = strpos( $label, '(' );
+	$close_pos   = strrpos( $label, ')' );
+	$parsed_html = esc_html( $label );
+
+	if ( false === $open_pos || false === $close_pos || $close_pos <= $open_pos ) {
+		return $parsed_html;
+	}
+
+	$title = trim( substr( $label, 0, $open_pos ) );
+	$unit  = trim( substr( $label, $open_pos + 1, $close_pos - $open_pos - 1 ) );
+
+	if ( '' === $unit ) {
+		return $parsed_html;
+	}
+
+	if ( '' === $title ) {
+		$title = trim( $label );
+	}
+
+	return sprintf(
+		'<span class="spec-title">%1$s</span><span class="spec-unit">%2$s</span>',
+		esc_html( $title ),
+		esc_html( $unit )
+	);
 }
 
 function palaplast_get_attribute_value( $product, $attr_name, $value_raw ) {
