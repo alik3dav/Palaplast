@@ -30,7 +30,6 @@ Palaplast displays a compact variation matrix for WooCommerce variable products 
 
 = 1.6.2 =
 * Declared compatibility with WooCommerce custom order tables (HPOS) and Cart/Checkout blocks to prevent false incompatible plugin notices.
-* Updated variation visibility filter callback signature to match WooCommerce hook arguments.
 
 = 1.6.0 =
 * Initial release.
