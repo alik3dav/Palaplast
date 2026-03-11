@@ -15,9 +15,9 @@ function palaplast_render_matrix_table() {
 		return;
 	}
 
-	$available_variations = $product->get_available_variations();
-	$attributes           = array_keys( $product->get_variation_attributes() );
-	if ( empty( $available_variations ) ) {
+	$table_variations = palaplast_get_table_variations( $product );
+	$attributes       = array_keys( $product->get_variation_attributes() );
+	if ( empty( $table_variations ) ) {
 		return;
 	}
 
@@ -32,16 +32,12 @@ function palaplast_render_matrix_table() {
 			<table class="palaplast-table" aria-label="<?php esc_attr_e( 'Product variation matrix', 'palaplast' ); ?>">
 				<thead><tr><th scope="col" class="col-sku"><?php esc_html_e( 'SKU', 'palaplast' ); ?></th><?php foreach ( $attributes as $attr_name ) : ?><th scope="col" class="col-attr"><?php echo wp_kses_post( palaplast_get_variation_header_html( wc_attribute_label( $attr_name ) ) ); ?></th><?php endforeach; ?></tr></thead>
 				<tbody>
-					<?php foreach ( $available_variations as $variation ) :
-						$variation_id  = isset( $variation['variation_id'] ) ? (int) $variation['variation_id'] : 0;
-						$variation_obj = wc_get_product( $variation_id );
-						if ( ! $variation_obj instanceof WC_Product_Variation ) {
-							continue;
-						}
+					<?php foreach ( $table_variations as $variation_obj ) :
+						$variation_attributes = $variation_obj->get_attributes();
 						?>
 						<tr>
 							<td class="col-sku"><?php echo esc_html( $variation_obj->get_sku() ? $variation_obj->get_sku() : '—' ); ?></td>
-							<?php foreach ( $attributes as $attr_name ) : $attribute_key = 'attribute_' . sanitize_title( $attr_name ); $value_raw = isset( $variation['attributes'][ $attribute_key ] ) ? $variation['attributes'][ $attribute_key ] : ''; $value = palaplast_get_attribute_value( $product, $attr_name, $value_raw ); ?>
+							<?php foreach ( $attributes as $attr_name ) : $value_raw = isset( $variation_attributes[ sanitize_title( $attr_name ) ] ) ? $variation_attributes[ sanitize_title( $attr_name ) ] : ''; $value = palaplast_get_attribute_value( $product, $attr_name, $value_raw ); ?>
 								<td class="col-attr"><?php echo esc_html( $value ); ?></td>
 							<?php endforeach; ?>
 						</tr>
@@ -64,6 +60,53 @@ function palaplast_render_matrix_table() {
 		</div>
 	</div>
 	<?php
+}
+
+function palaplast_get_table_variations( $product ) {
+	if ( ! $product instanceof WC_Product || ! $product->is_type( 'variable' ) ) {
+		return array();
+	}
+
+	$variation_ids = $product->get_children();
+	if ( empty( $variation_ids ) ) {
+		return array();
+	}
+
+	$table_variations = array();
+
+	foreach ( $variation_ids as $variation_id ) {
+		$variation_obj = wc_get_product( $variation_id );
+		if ( ! $variation_obj instanceof WC_Product_Variation || ! $variation_obj->exists() ) {
+			continue;
+		}
+
+		if ( 'publish' !== $variation_obj->get_status() || ! $variation_obj->variation_is_active() ) {
+			continue;
+		}
+
+		$attributes = $variation_obj->get_attributes();
+		if ( ! palaplast_variation_has_usable_attributes( $attributes ) ) {
+			continue;
+		}
+
+		$table_variations[] = $variation_obj;
+	}
+
+	return $table_variations;
+}
+
+function palaplast_variation_has_usable_attributes( $attributes ) {
+	if ( ! is_array( $attributes ) || empty( $attributes ) ) {
+		return false;
+	}
+
+	foreach ( $attributes as $value ) {
+		if ( '' !== trim( (string) $value ) ) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 function palaplast_get_product_custom_variation_rows( $product_id ) {
