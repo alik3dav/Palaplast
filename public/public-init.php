@@ -6,9 +6,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action( 'woocommerce_before_variations_form', 'palaplast_render_matrix_table_in_variation_form', 5 );
 add_action( 'woocommerce_after_single_product_summary', 'palaplast_render_matrix_table_fallback', 4 );
 add_action( 'wp_enqueue_scripts', 'palaplast_enqueue_styles' );
+add_filter( 'gettext', 'palaplast_hide_variable_unavailable_message', 20, 3 );
 add_shortcode( 'palaplast_variation_table', 'palaplast_variation_table_shortcode' );
 add_shortcode( 'palaplast_technical_sheet', 'palaplast_technical_sheet_button_shortcode' );
 add_shortcode( 'palaplast_pricelist_pdf', 'palaplast_pricelist_button_shortcode' );
+
+function palaplast_hide_variable_unavailable_message( $translation, $text, $domain ) {
+	if ( is_admin() || wp_doing_ajax() ) {
+		return $translation;
+	}
+
+	if ( 'woocommerce' !== $domain || 'This product is currently out of stock and unavailable.' !== $text ) {
+		return $translation;
+	}
+
+	if ( function_exists( 'is_product' ) && is_product() ) {
+		return '';
+	}
+
+	return $translation;
+}
 
 function palaplast_get_current_language_product_id( $product_id ) {
 	$product_id = (int) $product_id;
