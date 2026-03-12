@@ -14,6 +14,12 @@ function palaplast_render_pricelists_page() {
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Pricelists', 'palaplast' ); ?></h1>
+		<div class="notice notice-info" style="max-width:980px;margin-top:15px;">
+			<p>
+				<strong><?php esc_html_e( 'Frontend shortcode:', 'palaplast' ); ?></strong>
+				<code>[palaplast_pricelist_pdf]</code>
+			</p>
+		</div>
 		<?php if ( isset( $_GET['pricelist_updated'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Pricelist saved.', 'palaplast' ); ?></p></div><?php endif; ?>
 		<?php if ( isset( $_GET['pricelist_deleted'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Pricelist deleted.', 'palaplast' ); ?></p></div><?php endif; ?>
 

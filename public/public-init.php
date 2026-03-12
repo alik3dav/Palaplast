@@ -5,10 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'woocommerce_before_variations_form', 'palaplast_render_matrix_table_in_variation_form', 5 );
 add_action( 'woocommerce_after_single_product_summary', 'palaplast_render_matrix_table_fallback', 4 );
-add_action( 'woocommerce_single_product_summary', 'palaplast_render_technical_sheet_button', 35 );
-add_action( 'woocommerce_single_product_summary', 'palaplast_render_pricelist_button', 36 );
-add_action( 'woocommerce_before_add_to_cart_form', 'palaplast_render_technical_sheet_button', 5 );
-add_action( 'woocommerce_before_add_to_cart_form', 'palaplast_render_pricelist_button', 6 );
 add_action( 'wp_enqueue_scripts', 'palaplast_enqueue_styles' );
 add_shortcode( 'palaplast_variation_table', 'palaplast_variation_table_shortcode' );
 add_shortcode( 'palaplast_technical_sheet', 'palaplast_technical_sheet_button_shortcode' );

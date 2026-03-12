@@ -15,6 +15,13 @@ function palaplast_render_technical_sheets_page() {
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Technical Sheets', 'palaplast' ); ?></h1>
 
+		<div class="notice notice-info" style="max-width:980px;margin-top:15px;">
+			<p>
+				<strong><?php esc_html_e( 'Frontend shortcode:', 'palaplast' ); ?></strong>
+				<code>[palaplast_technical_sheet]</code>
+			</p>
+		</div>
+
 		<?php if ( isset( $_GET['sheet_updated'] ) ) : ?>
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Technical Sheet saved.', 'palaplast' ); ?></p></div>
 		<?php endif; ?>
