@@ -3,28 +3,123 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-add_action( 'woocommerce_after_single_product_summary', 'palaplast_render_matrix_table', 4 );
+add_action( 'woocommerce_before_variations_form', 'palaplast_render_matrix_table_in_variation_form', 5 );
+add_action( 'woocommerce_after_single_product_summary', 'palaplast_render_matrix_table_fallback', 4 );
 add_action( 'woocommerce_single_product_summary', 'palaplast_render_technical_sheet_button', 35 );
 add_action( 'woocommerce_single_product_summary', 'palaplast_render_pricelist_button', 36 );
 add_action( 'wp_enqueue_scripts', 'palaplast_enqueue_styles' );
+add_shortcode( 'palaplast_variation_table', 'palaplast_variation_table_shortcode' );
 
-function palaplast_render_matrix_table() {
+function palaplast_get_current_language_product_id( $product_id ) {
+	$product_id = (int) $product_id;
+
+	if ( ! $product_id || ! has_filter( 'wpml_object_id' ) ) {
+		return $product_id;
+	}
+
+	$translated_id = apply_filters( 'wpml_object_id', $product_id, 'product', true );
+
+	return $translated_id ? (int) $translated_id : $product_id;
+}
+
+
+function &palaplast_get_rendered_variation_table_products() {
+	static $rendered_products = array();
+
+	return $rendered_products;
+}
+
+function palaplast_mark_variation_table_rendered( $product_id ) {
+	$rendered_products = &palaplast_get_rendered_variation_table_products();
+
+	$product_id = (int) $product_id;
+	if ( ! $product_id ) {
+		return;
+	}
+
+	$rendered_products[ $product_id ] = true;
+}
+
+function palaplast_variation_table_already_rendered( $product_id ) {
+	$rendered_products = &palaplast_get_rendered_variation_table_products();
+
+	$product_id = (int) $product_id;
+
+	return $product_id && ! empty( $rendered_products[ $product_id ] );
+}
+
+function palaplast_render_matrix_table_in_variation_form() {
 	global $product;
 
-	if ( ! $product instanceof WC_Product || ! $product->is_type( 'variable' ) ) {
+	$target_product = $product instanceof WC_Product ? $product : wc_get_product( get_the_ID() );
+	if ( ! $target_product instanceof WC_Product ) {
 		return;
+	}
+
+	palaplast_render_matrix_table_for_product( $target_product->get_id() );
+}
+
+function palaplast_render_matrix_table_fallback() {
+	global $product;
+
+	$target_product = $product instanceof WC_Product ? $product : wc_get_product( get_the_ID() );
+	if ( ! $target_product instanceof WC_Product ) {
+		return;
+	}
+
+	$product_id = palaplast_get_current_language_product_id( $target_product->get_id() );
+	if ( palaplast_variation_table_already_rendered( $product_id ) ) {
+		return;
+	}
+
+	palaplast_render_matrix_table_for_product( $target_product->get_id() );
+}
+
+function palaplast_variation_table_shortcode( $atts ) {
+	$atts = shortcode_atts(
+		array(
+			'product_id' => 0,
+		),
+		$atts,
+		'palaplast_variation_table'
+	);
+
+	$product_id = (int) $atts['product_id'];
+
+	if ( ! $product_id ) {
+		$product_id = get_the_ID();
+	}
+
+	if ( ! $product_id ) {
+		return '';
+	}
+
+	return palaplast_render_matrix_table_for_product( $product_id, true );
+}
+
+function palaplast_render_matrix_table_for_product( $product_id, $return_html = false ) {
+	$product_id = palaplast_get_current_language_product_id( $product_id );
+	$product    = wc_get_product( $product_id );
+
+	if ( ! $product instanceof WC_Product || ! $product->is_type( 'variable' ) ) {
+		return $return_html ? '' : null;
+	}
+
+	if ( palaplast_variation_table_already_rendered( $product->get_id() ) ) {
+		return $return_html ? '' : null;
 	}
 
 	$table_variations = palaplast_get_table_variations( $product );
 	$attributes       = array_keys( $product->get_variation_attributes() );
 	if ( empty( $table_variations ) ) {
-		return;
+		return $return_html ? '' : null;
 	}
 
 	$custom_rows      = palaplast_get_product_custom_variation_rows( $product->get_id() );
 	$custom_rows      = array_values( $custom_rows );
 	$custom_row_index = 0;
 	$row_count        = 0;
+	ob_start();
 	?>
 	<div class="palaplast-matrix">
 		<h4 class="palaplast-title"><?php esc_html_e( 'Product Variations', 'palaplast' ); ?></h4>
@@ -60,6 +155,17 @@ function palaplast_render_matrix_table() {
 		</div>
 	</div>
 	<?php
+
+	$output = ob_get_clean();
+	palaplast_mark_variation_table_rendered( $product->get_id() );
+
+	if ( $return_html ) {
+		return $output;
+	}
+
+	echo $output;
+
+	return null;
 }
 
 function palaplast_get_table_variations( $product ) {
