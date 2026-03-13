@@ -227,10 +227,11 @@ function palaplast_render_pdf_list_shortcode( $items, $atts, $wrapper_class, $ti
 		<?php if ( $show_title && '' !== $title ) : ?>
 			<h3 class="<?php echo esc_attr( $title_class ); ?>"><?php echo esc_html( $title ); ?></h3>
 		<?php endif; ?>
-		<ul>
+		<ul class="palaplast-pdf-list" role="list">
 			<?php foreach ( $valid_items as $item ) : ?>
-				<li>
-					<a href="<?php echo esc_url( $item['file_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $item['name'] ); ?></a>
+				<li class="palaplast-pdf-list-item">
+					<div class="palaplast-pdf-list-item__title"><?php echo esc_html( $item['name'] ); ?></div>
+					<a class="palaplast-pdf-list-item__action" href="<?php echo esc_url( $item['file_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open PDF', 'palaplast' ); ?></a>
 				</li>
 			<?php endforeach; ?>
 		</ul>
