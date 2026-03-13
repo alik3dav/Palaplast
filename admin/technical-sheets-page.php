@@ -17,8 +17,12 @@ function palaplast_render_technical_sheets_page() {
 
 		<div class="notice notice-info" style="max-width:980px;margin-top:15px;">
 			<p>
-				<strong><?php esc_html_e( 'Frontend shortcode:', 'palaplast' ); ?></strong>
+				<strong><?php esc_html_e( 'Frontend shortcode (single product):', 'palaplast' ); ?></strong>
 				<code>[palaplast_technical_sheet]</code>
+			</p>
+			<p>
+				<strong><?php esc_html_e( 'Frontend shortcode (full list page):', 'palaplast' ); ?></strong>
+				<code>[palaplast_technical_sheets_list]</code>
 			</p>
 		</div>
 

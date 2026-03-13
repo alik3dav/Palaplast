@@ -10,6 +10,8 @@ add_filter( 'gettext', 'palaplast_hide_variable_unavailable_message', 20, 3 );
 add_shortcode( 'palaplast_variation_table', 'palaplast_variation_table_shortcode' );
 add_shortcode( 'palaplast_technical_sheet', 'palaplast_technical_sheet_button_shortcode' );
 add_shortcode( 'palaplast_pricelist_pdf', 'palaplast_pricelist_button_shortcode' );
+add_shortcode( 'palaplast_technical_sheets_list', 'palaplast_technical_sheets_list_shortcode' );
+add_shortcode( 'palaplast_pricelists_list', 'palaplast_pricelists_list_shortcode' );
 
 function palaplast_hide_variable_unavailable_message( $translation, $text, $domain ) {
 	if ( is_admin() || wp_doing_ajax() ) {
