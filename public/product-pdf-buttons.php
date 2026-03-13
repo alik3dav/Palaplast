@@ -157,6 +157,89 @@ function palaplast_pricelist_button_shortcode( $atts ) {
 	return palaplast_render_pricelist_button_for_product( (int) $atts['product_id'], true );
 }
 
+function palaplast_technical_sheets_list_shortcode( $atts ) {
+	$atts = shortcode_atts(
+		array(
+			'title'      => __( 'Technical Sheets', 'palaplast' ),
+			'show_title' => 'yes',
+		),
+		$atts,
+		'palaplast_technical_sheets_list'
+	);
+
+	return palaplast_render_pdf_list_shortcode(
+		palaplast_get_technical_sheets(),
+		$atts,
+		'palaplast-technical-sheets-list',
+		'palaplast-technical-sheets-list-title'
+	);
+}
+
+function palaplast_pricelists_list_shortcode( $atts ) {
+	$atts = shortcode_atts(
+		array(
+			'title'      => __( 'Pricelists', 'palaplast' ),
+			'show_title' => 'yes',
+		),
+		$atts,
+		'palaplast_pricelists_list'
+	);
+
+	return palaplast_render_pdf_list_shortcode(
+		palaplast_get_pricelists(),
+		$atts,
+		'palaplast-pricelists-list',
+		'palaplast-pricelists-list-title'
+	);
+}
+
+function palaplast_render_pdf_list_shortcode( $items, $atts, $wrapper_class, $title_class ) {
+	if ( empty( $items ) || ! is_array( $items ) ) {
+		return '';
+	}
+
+	$show_title  = isset( $atts['show_title'] ) ? wp_validate_boolean( $atts['show_title'] ) : true;
+	$title       = isset( $atts['title'] ) ? sanitize_text_field( (string) $atts['title'] ) : '';
+	$valid_items = array();
+
+	foreach ( $items as $item ) {
+		$item_name     = isset( $item['name'] ) ? (string) $item['name'] : '';
+		$attachment_id = isset( $item['attachment_id'] ) ? (int) $item['attachment_id'] : 0;
+		$file_url      = $attachment_id ? wp_get_attachment_url( $attachment_id ) : '';
+
+		if ( '' === $item_name || ! $file_url ) {
+			continue;
+		}
+
+		$valid_items[] = array(
+			'name'     => $item_name,
+			'file_url' => $file_url,
+		);
+	}
+
+	if ( empty( $valid_items ) ) {
+		return '';
+	}
+
+	ob_start();
+	?>
+	<div class="<?php echo esc_attr( $wrapper_class ); ?>">
+		<?php if ( $show_title && '' !== $title ) : ?>
+			<h3 class="<?php echo esc_attr( $title_class ); ?>"><?php echo esc_html( $title ); ?></h3>
+		<?php endif; ?>
+		<ul>
+			<?php foreach ( $valid_items as $item ) : ?>
+				<li>
+					<a href="<?php echo esc_url( $item['file_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $item['name'] ); ?></a>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+	</div>
+	<?php
+
+	return ob_get_clean();
+}
+
 function palaplast_get_product_for_pdf_output( $product_id = 0 ) {
 	$product_id = (int) $product_id;
 
