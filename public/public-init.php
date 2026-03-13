@@ -147,11 +147,16 @@ function palaplast_render_matrix_table_for_product( $product_id, $return_html = 
 				<thead><tr><th scope="col" class="col-sku"><?php esc_html_e( 'SKU', 'palaplast' ); ?></th><?php foreach ( $attributes as $attr_name ) : ?><th scope="col" class="col-attr"><?php echo wp_kses_post( palaplast_get_variation_header_html( wc_attribute_label( $attr_name ) ) ); ?></th><?php endforeach; ?></tr></thead>
 				<tbody>
 					<?php foreach ( $table_variations as $variation_obj ) :
-						$variation_attributes = $variation_obj->get_attributes();
+						$variation_id         = $variation_obj->get_id();
+						$variation_attributes = $variation_obj->get_variation_attributes();
 						?>
-						<tr>
+						<tr data-variation-id="<?php echo esc_attr( (string) $variation_id ); ?>">
 							<td class="col-sku"><?php echo esc_html( $variation_obj->get_sku() ? $variation_obj->get_sku() : '—' ); ?></td>
-							<?php foreach ( $attributes as $attr_name ) : $value_raw = isset( $variation_attributes[ sanitize_title( $attr_name ) ] ) ? $variation_attributes[ sanitize_title( $attr_name ) ] : ''; $value = palaplast_get_attribute_value( $product, $attr_name, $value_raw ); ?>
+							<?php foreach ( $attributes as $attr_name ) :
+								$variation_attribute_key = 'attribute_' . sanitize_title( $attr_name );
+								$value_raw               = isset( $variation_attributes[ $variation_attribute_key ] ) ? $variation_attributes[ $variation_attribute_key ] : '';
+								$value                   = palaplast_get_attribute_value( $product, $attr_name, $value_raw );
+								?>
 								<td class="col-attr"><?php echo esc_html( $value ); ?></td>
 							<?php endforeach; ?>
 						</tr>
@@ -192,7 +197,7 @@ function palaplast_get_table_variations( $product ) {
 		return array();
 	}
 
-	$variation_ids = $product->get_children();
+	$variation_ids = palaplast_get_variation_ids_in_menu_order( $product->get_id() );
 	if ( empty( $variation_ids ) ) {
 		return array();
 	}
@@ -218,6 +223,35 @@ function palaplast_get_table_variations( $product ) {
 	}
 
 	return $table_variations;
+}
+
+function palaplast_get_variation_ids_in_menu_order( $product_id ) {
+	$product_id = (int) $product_id;
+	if ( $product_id <= 0 ) {
+		return array();
+	}
+
+	$variation_ids = get_posts(
+		array(
+			'post_parent'            => $product_id,
+			'post_type'              => 'product_variation',
+			'post_status'            => array( 'publish', 'private' ),
+			'fields'                 => 'ids',
+			'posts_per_page'         => -1,
+			'orderby'                => array(
+				'menu_order' => 'ASC',
+				'ID'         => 'ASC',
+			),
+			'order'                  => 'ASC',
+			'suppress_filters'       => false,
+			'ignore_sticky_posts'    => true,
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		)
+	);
+
+	return array_map( 'intval', $variation_ids );
 }
 
 function palaplast_variation_has_usable_attributes( $attributes ) {
