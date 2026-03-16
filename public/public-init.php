@@ -152,7 +152,9 @@ function palaplast_render_matrix_table_for_product( $product_id, $return_html = 
 						$sku                  = $variation_obj->get_sku();
 						?>
 						<tr data-variation-id="<?php echo esc_attr( (string) $variation_id ); ?>">
-							<td class="col-sku"><?php if ( $sku ) : ?><span class="palaplast-code-cell"><span class="palaplast-code-value"><?php echo esc_html( $sku ); ?></span><button type="button" class="palaplast-copy-code" data-copy-value="<?php echo esc_attr( $sku ); ?>" aria-label="<?php esc_attr_e( 'Copy product code', 'palaplast' ); ?>"><span class="palaplast-copy-code__icon" aria-hidden="true">⧉</span><span class="palaplast-copy-code__text"><?php esc_html_e( 'Copy', 'palaplast' ); ?></span></button></span><?php else : ?><?php echo esc_html( '—' ); ?><?php endif; ?></td>
+							<td class="col-sku"><?php if ( $sku ) : ?><span class="palaplast-code-cell"><span class="palaplast-code-value"><?php echo esc_html( $sku ); ?></span><button type="button" class="palaplast-copy-code" data-copy-value="<?php echo esc_attr( $sku ); ?>" aria-label="<?php esc_attr_e( 'Copy product code', 'palaplast' ); ?>"><span class="palaplast-copy-code__icon" aria-hidden="true">
+								<img src="<?php echo esc_url( 'http://localhost:10016/wp-content/uploads/2026/03/copy.svg' ); ?>" alt="" />
+							</span><span class="palaplast-copy-code__text"><?php esc_html_e( 'Copy', 'palaplast' ); ?></span></button></span><?php else : ?><?php echo esc_html( '—' ); ?><?php endif; ?></td>
 							<?php foreach ( $attributes as $attr_name ) :
 								$variation_attribute_key = 'attribute_' . sanitize_title( $attr_name );
 								$value_raw               = isset( $variation_attributes[ $variation_attribute_key ] ) ? $variation_attributes[ $variation_attribute_key ] : '';
