@@ -90,6 +90,46 @@ function palaplast_clear_pricelist_from_categories( $pricelist_id ) {
 	}
 }
 
+function palaplast_get_wpml_aware_term_meta_value( $term_id, $meta_key ) {
+	$term_id  = (int) $term_id;
+	$meta_key = (string) $meta_key;
+
+	if ( ! $term_id || '' === $meta_key ) {
+		return 0;
+	}
+
+	$term_ids_to_check = array( $term_id );
+
+	if ( has_filter( 'wpml_object_id' ) ) {
+		$current_lang = apply_filters( 'wpml_current_language', null );
+		if ( is_string( $current_lang ) && '' !== $current_lang ) {
+			$current_lang_term_id = (int) apply_filters( 'wpml_object_id', $term_id, 'product_cat', true, $current_lang );
+			if ( $current_lang_term_id ) {
+				$term_ids_to_check[] = $current_lang_term_id;
+			}
+		}
+
+		$default_lang = apply_filters( 'wpml_default_language', null );
+		if ( is_string( $default_lang ) && '' !== $default_lang ) {
+			$default_lang_term_id = (int) apply_filters( 'wpml_object_id', $term_id, 'product_cat', true, $default_lang );
+			if ( $default_lang_term_id ) {
+				$term_ids_to_check[] = $default_lang_term_id;
+			}
+		}
+	}
+
+	$term_ids_to_check = array_unique( array_map( 'intval', $term_ids_to_check ) );
+
+	foreach ( $term_ids_to_check as $meta_term_id ) {
+		$meta_value = (int) get_term_meta( $meta_term_id, $meta_key, true );
+		if ( $meta_value ) {
+			return $meta_value;
+		}
+	}
+
+	return 0;
+}
+
 function palaplast_resolve_category_sheet( $term_id ) {
 	$term = get_term( $term_id, 'product_cat' );
 
@@ -102,7 +142,7 @@ function palaplast_resolve_category_sheet( $term_id ) {
 	$distance     = 0;
 
 	while ( $current_term instanceof WP_Term && 'product_cat' === $current_term->taxonomy ) {
-		$sheet_id = (int) get_term_meta( (int) $current_term->term_id, 'palaplast_technical_sheet_id', true );
+		$sheet_id = palaplast_get_wpml_aware_term_meta_value( (int) $current_term->term_id, 'palaplast_technical_sheet_id' );
 
 		if ( $sheet_id && isset( $sheets[ $sheet_id ] ) ) {
 			$file_url = ! empty( $sheets[ $sheet_id ]['attachment_id'] ) ? wp_get_attachment_url( (int) $sheets[ $sheet_id ]['attachment_id'] ) : '';
@@ -140,7 +180,7 @@ function palaplast_resolve_category_pricelist( $term_id ) {
 	$distance     = 0;
 
 	while ( $current_term instanceof WP_Term && 'product_cat' === $current_term->taxonomy ) {
-		$pricelist_id = (int) get_term_meta( (int) $current_term->term_id, 'palaplast_pricelist_id', true );
+		$pricelist_id = palaplast_get_wpml_aware_term_meta_value( (int) $current_term->term_id, 'palaplast_pricelist_id' );
 
 		if ( $pricelist_id && isset( $pricelists[ $pricelist_id ] ) ) {
 			$file_url = ! empty( $pricelists[ $pricelist_id ]['attachment_id'] ) ? wp_get_attachment_url( (int) $pricelists[ $pricelist_id ]['attachment_id'] ) : '';
