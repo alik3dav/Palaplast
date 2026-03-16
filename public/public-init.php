@@ -152,9 +152,7 @@ function palaplast_render_matrix_table_for_product( $product_id, $return_html = 
 						$sku                  = $variation_obj->get_sku();
 						?>
 						<tr data-variation-id="<?php echo esc_attr( (string) $variation_id ); ?>">
-							<td class="col-sku"><?php if ( $sku ) : ?><span class="palaplast-code-cell"><span class="palaplast-code-value"><?php echo esc_html( $sku ); ?></span><button type="button" class="palaplast-copy-code" data-copy-value="<?php echo esc_attr( $sku ); ?>" aria-label="<?php esc_attr_e( 'Copy product code', 'palaplast' ); ?>"><span class="palaplast-copy-code__icon" aria-hidden="true">
-								<img src="<?php echo esc_url( 'http://localhost:10016/wp-content/uploads/2026/03/copy.svg' ); ?>" alt="" />
-							</span><span class="palaplast-copy-code__text"><?php esc_html_e( 'Copy', 'palaplast' ); ?></span></button></span><?php else : ?><?php echo esc_html( '—' ); ?><?php endif; ?></td>
+							<td class="col-sku"><?php if ( $sku ) : ?><span class="palaplast-code-cell"><span class="palaplast-code-value"><?php echo esc_html( $sku ); ?></span><button type="button" class="palaplast-copy-code" data-copy-value="<?php echo esc_attr( $sku ); ?>" aria-label="<?php esc_attr_e( 'Copy product code', 'palaplast' ); ?>"><span class="palaplast-copy-code__icon" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><path d="M6 2a2 2 0 0 0-2 2v1h1V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1v1h1a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H6Z"/><path d="M4 5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4Zm0 1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></svg></span><span class="palaplast-copy-code__text"><?php esc_html_e( 'Copy', 'palaplast' ); ?></span></button></span><?php else : ?><?php echo esc_html( '—' ); ?><?php endif; ?></td>
 							<?php foreach ( $attributes as $attr_name ) :
 								$variation_attribute_key = 'attribute_' . sanitize_title( $attr_name );
 								$value_raw               = isset( $variation_attributes[ $variation_attribute_key ] ) ? $variation_attributes[ $variation_attribute_key ] : '';
