@@ -144,14 +144,15 @@ function palaplast_render_matrix_table_for_product( $product_id, $return_html = 
 		<h4 class="palaplast-title"><?php esc_html_e( 'Product Variations', 'palaplast' ); ?></h4>
 		<div class="palaplast-table-wrap">
 			<table class="palaplast-table" aria-label="<?php esc_attr_e( 'Product variation matrix', 'palaplast' ); ?>">
-				<thead><tr><th scope="col" class="col-sku"><?php esc_html_e( 'SKU', 'palaplast' ); ?></th><?php foreach ( $attributes as $attr_name ) : ?><th scope="col" class="col-attr"><?php echo wp_kses_post( palaplast_get_variation_header_html( wc_attribute_label( $attr_name ) ) ); ?></th><?php endforeach; ?></tr></thead>
+				<thead><tr><th scope="col" class="col-sku"><?php esc_html_e( 'Product Code', 'palaplast' ); ?></th><?php foreach ( $attributes as $attr_name ) : ?><th scope="col" class="col-attr"><?php echo wp_kses_post( palaplast_get_variation_header_html( wc_attribute_label( $attr_name ) ) ); ?></th><?php endforeach; ?></tr></thead>
 				<tbody>
 					<?php foreach ( $table_variations as $variation_obj ) :
 						$variation_id         = $variation_obj->get_id();
 						$variation_attributes = $variation_obj->get_variation_attributes();
+						$sku                  = $variation_obj->get_sku();
 						?>
 						<tr data-variation-id="<?php echo esc_attr( (string) $variation_id ); ?>">
-							<td class="col-sku"><?php echo esc_html( $variation_obj->get_sku() ? $variation_obj->get_sku() : '—' ); ?></td>
+							<td class="col-sku"><?php if ( $sku ) : ?><span class="palaplast-code-cell"><span class="palaplast-code-value"><?php echo esc_html( $sku ); ?></span><button type="button" class="palaplast-copy-code" data-copy-value="<?php echo esc_attr( $sku ); ?>" aria-label="<?php esc_attr_e( 'Copy product code', 'palaplast' ); ?>"><span class="palaplast-copy-code__icon" aria-hidden="true">⧉</span><span class="palaplast-copy-code__text"><?php esc_html_e( 'Copy', 'palaplast' ); ?></span></button></span><?php else : ?><?php echo esc_html( '—' ); ?><?php endif; ?></td>
 							<?php foreach ( $attributes as $attr_name ) :
 								$variation_attribute_key = 'attribute_' . sanitize_title( $attr_name );
 								$value_raw               = isset( $variation_attributes[ $variation_attribute_key ] ) ? $variation_attributes[ $variation_attribute_key ] : '';
