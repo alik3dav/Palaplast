@@ -141,7 +141,7 @@ function palaplast_render_matrix_table_for_product( $product_id, $return_html = 
 	ob_start();
 	?>
 	<div class="palaplast-matrix">
-		<h4 class="palaplast-title"><?php esc_html_e( 'Product Variations', 'palaplast' ); ?></h4>
+		
 		<div class="palaplast-table-wrap">
 			<table class="palaplast-table" aria-label="<?php esc_attr_e( 'Product variation matrix', 'palaplast' ); ?>">
 				<thead><tr><th scope="col" class="col-sku"><?php esc_html_e( 'Product Code', 'palaplast' ); ?></th><?php foreach ( $attributes as $attr_name ) : ?><th scope="col" class="col-attr"><?php echo wp_kses_post( palaplast_get_variation_header_html( wc_attribute_label( $attr_name ) ) ); ?></th><?php endforeach; ?></tr></thead>
