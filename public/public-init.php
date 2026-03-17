@@ -147,6 +147,12 @@ function palaplast_render_matrix_table_for_product( $product_id, $return_html = 
 				<thead><tr><th scope="col" class="col-sku"><?php esc_html_e( 'Product Code', 'palaplast' ); ?></th><?php foreach ( $attributes as $attr_name ) : ?><th scope="col" class="col-attr"><?php echo wp_kses_post( palaplast_get_variation_header_html( wc_attribute_label( $attr_name ) ) ); ?></th><?php endforeach; ?></tr></thead>
 				<tbody>
 					<?php foreach ( $table_variations as $variation_obj ) :
+						$visible_row_position = $row_count + 1;
+						while ( isset( $custom_rows[ $custom_row_index ] ) && (int) $custom_rows[ $custom_row_index ]['position'] === $visible_row_position ) {
+							palaplast_render_custom_variation_table_row( $custom_rows[ $custom_row_index ], count( $attributes ) + 1 );
+							$custom_row_index++;
+						}
+
 						$variation_id         = $variation_obj->get_id();
 						$variation_attributes = $variation_obj->get_variation_attributes();
 						$sku                  = $variation_obj->get_sku();
@@ -163,10 +169,6 @@ function palaplast_render_matrix_table_for_product( $product_id, $return_html = 
 						</tr>
 						<?php
 						$row_count++;
-						while ( isset( $custom_rows[ $custom_row_index ] ) && (int) $custom_rows[ $custom_row_index ]['position'] === $row_count ) {
-							palaplast_render_custom_variation_table_row( $custom_rows[ $custom_row_index ], count( $attributes ) + 1 );
-							$custom_row_index++;
-						}
 						?>
 					<?php endforeach; ?>
 					<?php
