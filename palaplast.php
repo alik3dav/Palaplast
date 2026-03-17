@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Palaplast
  * Description: Displays a clean, compact variation matrix (SKU + attributes + price) above the product tabs for variable WooCommerce products.
- * Version: 1.8.0
+ * Version: 1.8.4
  * Author: Palaplast
  * License: GPL-2.0-or-later
  * Text Domain: palaplast
