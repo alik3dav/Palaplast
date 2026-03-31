@@ -68,7 +68,7 @@ function palaplast_render_technical_sheet_button_for_product( $product_id = 0, $
 	ob_start();
 	?>
 	<p class="palaplast-technical-sheet">
-		<a class="button palaplast-technical-sheet-button" href="<?php echo esc_url( $sheet['file_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Download Technical Sheet', 'palaplast' ); ?></a>
+		<a class="button palaplast-technical-sheet-button" href="<?php echo esc_url( $sheet['file_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Technical Sheet', 'palaplast' ); ?></a>
 	</p>
 	<?php
 
@@ -117,7 +117,7 @@ function palaplast_render_pricelist_button_for_product( $product_id = 0, $return
 	ob_start();
 	?>
 	<p class="palaplast-pricelist">
-		<a class="button palaplast-pricelist-button" href="<?php echo esc_url( $pricelist['file_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Download Pricelist', 'palaplast' ); ?></a>
+		<a class="button palaplast-pricelist-button" href="<?php echo esc_url( $pricelist['file_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Pricelist', 'palaplast' ); ?></a>
 	</p>
 	<?php
 
