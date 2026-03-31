@@ -1,0 +1,26 @@
+.palaplast-admin-notice,
+.palaplast-admin-table {
+	max-width: 980px;
+}
+
+.palaplast-admin-notice {
+	margin-top: 15px;
+}
+
+.palaplast-admin-card {
+	max-width: 780px;
+	padding: 20px;
+	margin-top: 20px;
+}
+
+.palaplast-admin-card-title {
+	margin-top: 0;
+}
+
+.palaplast-admin-selected-file {
+	margin-top: 8px;
+}
+
+.palaplast-admin-list-title {
+	margin-top: 30px;
+}

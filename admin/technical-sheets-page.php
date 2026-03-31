@@ -15,7 +15,7 @@ function palaplast_render_technical_sheets_page() {
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Technical Sheets', 'palaplast' ); ?></h1>
 
-		<div class="notice notice-info" style="max-width:980px;margin-top:15px;">
+		<div class="notice notice-info palaplast-admin-notice">
 			<p>
 				<strong><?php esc_html_e( 'Frontend shortcode (single product):', 'palaplast' ); ?></strong>
 				<code>[palaplast_technical_sheet]</code>
@@ -34,8 +34,8 @@ function palaplast_render_technical_sheets_page() {
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Technical Sheet deleted.', 'palaplast' ); ?></p></div>
 		<?php endif; ?>
 
-		<div class="card" style="max-width:780px;padding:20px;margin-top:20px;">
-			<h2 style="margin-top:0;"><?php echo $edit_id ? esc_html__( 'Edit Technical Sheet', 'palaplast' ) : esc_html__( 'Add Technical Sheet', 'palaplast' ); ?></h2>
+		<div class="card palaplast-admin-card">
+			<h2 class="palaplast-admin-card-title"><?php echo $edit_id ? esc_html__( 'Edit Technical Sheet', 'palaplast' ) : esc_html__( 'Add Technical Sheet', 'palaplast' ); ?></h2>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( 'palaplast_save_sheet' ); ?>
 				<input type="hidden" name="action" value="palaplast_save_sheet" />
@@ -70,8 +70,8 @@ function palaplast_render_technical_sheets_page() {
 			</form>
 		</div>
 
-		<h2 style="margin-top:30px;"><?php esc_html_e( 'All Technical Sheets', 'palaplast' ); ?></h2>
-		<table class="widefat striped" style="max-width:980px;">
+		<h2 class="palaplast-admin-list-title"><?php esc_html_e( 'All Technical Sheets', 'palaplast' ); ?></h2>
+		<table class="widefat striped palaplast-admin-table">
 			<thead><tr><th><?php esc_html_e( 'Name', 'palaplast' ); ?></th><th><?php esc_html_e( 'PDF File', 'palaplast' ); ?></th><th><?php esc_html_e( 'Date', 'palaplast' ); ?></th><th><?php esc_html_e( 'Actions', 'palaplast' ); ?></th></tr></thead>
 			<tbody>
 				<?php if ( empty( $sheets ) ) : ?>
