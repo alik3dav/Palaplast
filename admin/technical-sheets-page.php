@@ -11,6 +11,27 @@ function palaplast_render_technical_sheets_page() {
 	$sheets  = palaplast_get_technical_sheets();
 	$edit_id = isset( $_GET['edit_sheet'] ) ? absint( wp_unslash( $_GET['edit_sheet'] ) ) : 0;
 	$sheet   = ( $edit_id && isset( $sheets[ $edit_id ] ) ) ? $sheets[ $edit_id ] : array();
+	$categories = get_terms(
+		array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => false,
+		)
+	);
+	$assigned_category_id = 0;
+
+	if ( $edit_id && ! is_wp_error( $categories ) ) {
+		foreach ( $categories as $category ) {
+			if ( ! $category instanceof WP_Term ) {
+				continue;
+			}
+
+			$current_sheet_id = (int) get_term_meta( (int) $category->term_id, 'palaplast_technical_sheet_id', true );
+			if ( $current_sheet_id === $edit_id ) {
+				$assigned_category_id = (int) $category->term_id;
+				break;
+			}
+		}
+	}
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Technical Sheets', 'palaplast' ); ?></h1>
@@ -68,6 +89,25 @@ function palaplast_render_technical_sheets_page() {
 							</p>
 						</td>
 					</tr>
+					<tr>
+						<th scope="row"><label for="palaplast_sheet_category_id"><?php esc_html_e( 'Assign to Category', 'palaplast' ); ?></label></th>
+						<td>
+							<select id="palaplast_sheet_category_id" name="sheet_category_id">
+								<option value="0"><?php esc_html_e( '— No category —', 'palaplast' ); ?></option>
+								<?php if ( ! is_wp_error( $categories ) ) : ?>
+									<?php foreach ( $categories as $category ) : ?>
+										<?php if ( ! $category instanceof WP_Term ) : ?>
+											<?php continue; ?>
+										<?php endif; ?>
+										<option value="<?php echo esc_attr( (string) $category->term_id ); ?>" <?php selected( $assigned_category_id, (int) $category->term_id ); ?>>
+											<?php echo esc_html( $category->name ); ?>
+										</option>
+									<?php endforeach; ?>
+								<?php endif; ?>
+							</select>
+							<p class="description"><?php esc_html_e( 'Optionally connect this technical sheet directly from here instead of editing the category screen.', 'palaplast' ); ?></p>
+						</td>
+					</tr>
 				</table>
 
 				<?php submit_button( $edit_id ? __( 'Update Sheet', 'palaplast' ) : __( 'Add Sheet', 'palaplast' ) ); ?>
@@ -76,18 +116,39 @@ function palaplast_render_technical_sheets_page() {
 
 		<h2 class="palaplast-admin-list-title"><?php esc_html_e( 'All Technical Sheets', 'palaplast' ); ?></h2>
 		<table class="widefat striped palaplast-admin-table">
-			<thead><tr><th><?php esc_html_e( 'Name', 'palaplast' ); ?></th><th><?php esc_html_e( 'PDF File', 'palaplast' ); ?></th><th><?php esc_html_e( 'Date', 'palaplast' ); ?></th><th><?php esc_html_e( 'Actions', 'palaplast' ); ?></th></tr></thead>
+			<thead><tr><th><?php esc_html_e( 'Name', 'palaplast' ); ?></th><th><?php esc_html_e( 'Category', 'palaplast' ); ?></th><th><?php esc_html_e( 'PDF File', 'palaplast' ); ?></th><th><?php esc_html_e( 'Date', 'palaplast' ); ?></th><th><?php esc_html_e( 'Actions', 'palaplast' ); ?></th></tr></thead>
 			<tbody>
 				<?php if ( empty( $sheets ) ) : ?>
-					<tr><td colspan="4"><?php esc_html_e( 'No technical sheets found.', 'palaplast' ); ?></td></tr>
+					<tr><td colspan="5"><?php esc_html_e( 'No technical sheets found.', 'palaplast' ); ?></td></tr>
 				<?php else : foreach ( $sheets as $sheet_id => $sheet_data ) :
 					$file_url = ! empty( $sheet_data['attachment_id'] ) ? wp_get_attachment_url( (int) $sheet_data['attachment_id'] ) : '';
 					$file_name = ! empty( $sheet_data['attachment_id'] ) ? basename( (string) get_attached_file( (int) $sheet_data['attachment_id'] ) ) : '';
+					$assigned_categories = get_terms(
+						array(
+							'taxonomy'   => 'product_cat',
+							'hide_empty' => false,
+							'meta_query' => array(
+								array(
+									'key'   => 'palaplast_technical_sheet_id',
+									'value' => (string) $sheet_id,
+								),
+							),
+						)
+					);
+					$category_names = array();
+					if ( ! is_wp_error( $assigned_categories ) ) {
+						foreach ( $assigned_categories as $assigned_category ) {
+							if ( $assigned_category instanceof WP_Term ) {
+								$category_names[] = $assigned_category->name;
+							}
+						}
+					}
 					$edit_url = add_query_arg( array( 'page' => 'palaplast-technical-sheets', 'edit_sheet' => $sheet_id ), admin_url( 'admin.php' ) );
 					$delete_url = wp_nonce_url( add_query_arg( array( 'action' => 'palaplast_delete_sheet', 'sheet_id' => $sheet_id ), admin_url( 'admin-post.php' ) ), 'palaplast_delete_sheet_' . $sheet_id );
 					?>
 					<tr>
 						<td><?php echo esc_html( isset( $sheet_data['name'] ) ? $sheet_data['name'] : '' ); ?></td>
+						<td><?php echo ! empty( $category_names ) ? esc_html( implode( ', ', $category_names ) ) : '—'; ?></td>
 						<td><?php if ( $file_url ) : ?><a href="<?php echo esc_url( $file_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $file_name ? $file_name : $file_url ); ?></a><?php else : esc_html_e( 'No file', 'palaplast' ); endif; ?></td>
 						<td><?php echo ! empty( $sheet_data['created_at'] ) ? esc_html( date_i18n( get_option( 'date_format' ), strtotime( $sheet_data['created_at'] ) ) ) : ''; ?></td>
 						<td><a class="button button-small" href="<?php echo esc_url( $edit_url ); ?>"><?php esc_html_e( 'Edit', 'palaplast' ); ?></a> <a class="button button-small" href="<?php echo esc_url( $delete_url ); ?>" onclick="return confirm('<?php echo esc_js( __( 'Delete this technical sheet?', 'palaplast' ) ); ?>');"><?php esc_html_e( 'Delete', 'palaplast' ); ?></a></td>
@@ -108,6 +169,7 @@ function palaplast_handle_save_sheet() {
 	$sheet_id      = isset( $_POST['sheet_id'] ) ? absint( wp_unslash( $_POST['sheet_id'] ) ) : 0;
 	$sheet_name    = isset( $_POST['sheet_name'] ) ? sanitize_text_field( wp_unslash( $_POST['sheet_name'] ) ) : '';
 	$attachment_id = isset( $_POST['attachment_id'] ) ? absint( wp_unslash( $_POST['attachment_id'] ) ) : 0;
+	$category_id   = isset( $_POST['sheet_category_id'] ) ? absint( wp_unslash( $_POST['sheet_category_id'] ) ) : 0;
 
 	if ( '' === $sheet_name || ! palaplast_is_valid_pdf_attachment( $attachment_id ) ) {
 		wp_safe_redirect( admin_url( 'admin.php?page=palaplast-technical-sheets' ) );
@@ -124,6 +186,13 @@ function palaplast_handle_save_sheet() {
 	}
 
 	update_option( 'palaplast_technical_sheets', $sheets, false );
+	palaplast_clear_sheet_from_categories( $sheet_id );
+	if ( $category_id ) {
+		$category = get_term( $category_id, 'product_cat' );
+		if ( $category instanceof WP_Term ) {
+			update_term_meta( $category_id, 'palaplast_technical_sheet_id', $sheet_id );
+		}
+	}
 	wp_safe_redirect( admin_url( 'admin.php?page=palaplast-technical-sheets&sheet_updated=1' ) );
 	exit;
 }
