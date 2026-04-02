@@ -17,6 +17,7 @@ A lightweight WooCommerce plugin that renders a clean variation matrix (SKU + at
 - Loads only when WooCommerce is active.
 - Enqueues CSS via `wp_enqueue_scripts` instead of printing inline `<style>` inside content output.
 - Escapes all dynamic output in the table.
+- Supports `[palaplast_technical_sheets_list category="slug-one,slug-two"]` to list only sheets resolved for specific product category slugs.
 
 ## Installation
 
