@@ -162,13 +162,20 @@ function palaplast_technical_sheets_list_shortcode( $atts ) {
 		array(
 			'title'      => __( 'Technical Sheets', 'palaplast' ),
 			'show_title' => 'yes',
+			'category'   => '',
 		),
 		$atts,
 		'palaplast_technical_sheets_list'
 	);
 
+	$items = palaplast_get_technical_sheets();
+
+	if ( '' !== trim( (string) $atts['category'] ) ) {
+		$items = palaplast_get_technical_sheets_for_shortcode_category( (string) $atts['category'] );
+	}
+
 	return palaplast_render_pdf_list_shortcode(
-		palaplast_get_technical_sheets(),
+		$items,
 		$atts,
 		'palaplast-technical-sheets-list',
 		'palaplast-technical-sheets-list-title'
@@ -239,6 +246,50 @@ function palaplast_render_pdf_list_shortcode( $items, $atts, $wrapper_class, $ti
 	<?php
 
 	return ob_get_clean();
+}
+
+function palaplast_get_technical_sheets_for_shortcode_category( $category_slugs ) {
+	$category_slugs = array_filter(
+		array_map( 'sanitize_title', array_map( 'trim', explode( ',', (string) $category_slugs ) ) )
+	);
+
+	if ( empty( $category_slugs ) ) {
+		return array();
+	}
+
+	$categories = get_terms(
+		array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => false,
+			'slug'       => $category_slugs,
+		)
+	);
+
+	if ( is_wp_error( $categories ) || empty( $categories ) ) {
+		return array();
+	}
+
+	$all_sheets    = palaplast_get_technical_sheets();
+	$filtered      = array();
+	$seen_sheet_ids = array();
+
+	foreach ( $categories as $category ) {
+		if ( ! $category instanceof WP_Term ) {
+			continue;
+		}
+
+		$resolved_sheet = palaplast_resolve_category_sheet( (int) $category->term_id );
+		$sheet_id       = isset( $resolved_sheet['sheet_id'] ) ? (int) $resolved_sheet['sheet_id'] : 0;
+
+		if ( ! $sheet_id || isset( $seen_sheet_ids[ $sheet_id ] ) || ! isset( $all_sheets[ $sheet_id ] ) ) {
+			continue;
+		}
+
+		$filtered[ $sheet_id ]      = $all_sheets[ $sheet_id ];
+		$seen_sheet_ids[ $sheet_id ] = true;
+	}
+
+	return $filtered;
 }
 
 function palaplast_get_product_for_pdf_output( $product_id = 0 ) {

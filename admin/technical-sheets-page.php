@@ -24,6 +24,10 @@ function palaplast_render_technical_sheets_page() {
 				<strong><?php esc_html_e( 'Frontend shortcode (full list page):', 'palaplast' ); ?></strong>
 				<code>[palaplast_technical_sheets_list]</code>
 			</p>
+			<p>
+				<strong><?php esc_html_e( 'Filter by product category slug(s):', 'palaplast' ); ?></strong>
+				<code>[palaplast_technical_sheets_list category="pipes,fittings"]</code>
+			</p>
 		</div>
 
 		<?php if ( isset( $_GET['sheet_updated'] ) ) : ?>
