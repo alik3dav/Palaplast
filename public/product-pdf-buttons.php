@@ -160,7 +160,7 @@ function palaplast_pricelist_button_shortcode( $atts ) {
 function palaplast_technical_sheets_list_shortcode( $atts ) {
 	$atts = shortcode_atts(
 		array(
-			'title'      => __( 'Technical Sheets', 'palaplast' ),
+			'title'      => __( '', 'palaplast' ),
 			'show_title' => 'yes',
 			'category'   => '',
 		),
