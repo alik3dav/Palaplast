@@ -28,7 +28,7 @@ function palaplast_register_custom_post_types() {
 			'labels'             => $certificate_labels,
 			'public'             => false,
 			'show_ui'            => true,
-			'show_in_menu'       => 'woocommerce',
+			'show_in_menu'       => false,
 			'show_in_admin_bar'  => false,
 			'show_in_nav_menus'  => false,
 			'show_in_rest'       => true,

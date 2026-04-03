@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'admin_menu', 'palaplast_register_technical_sheets_menu' );
 add_action( 'admin_menu', 'palaplast_register_pricelists_menu' );
+add_action( 'admin_menu', 'palaplast_register_certificates_menu' );
 add_action( 'admin_enqueue_scripts', 'palaplast_enqueue_admin_assets' );
 add_action( 'admin_post_palaplast_save_sheet', 'palaplast_handle_save_sheet' );
 add_action( 'admin_post_palaplast_delete_sheet', 'palaplast_handle_delete_sheet' );
@@ -27,6 +28,11 @@ function palaplast_register_technical_sheets_menu() {
 
 function palaplast_register_pricelists_menu() {
 	add_submenu_page( 'woocommerce', __( 'Pricelists', 'palaplast' ), __( 'Pricelists', 'palaplast' ), 'manage_woocommerce', 'palaplast-pricelists', 'palaplast_render_pricelists_page' );
+}
+
+function palaplast_register_certificates_menu() {
+	add_submenu_page( 'woocommerce', __( 'Certificates', 'palaplast' ), __( 'Certificates', 'palaplast' ), 'manage_woocommerce', 'edit.php?post_type=palaplast_certificate' );
+	add_submenu_page( 'woocommerce', __( 'Add Certificate', 'palaplast' ), __( 'Add Certificate', 'palaplast' ), 'manage_woocommerce', 'post-new.php?post_type=palaplast_certificate' );
 }
 
 function palaplast_render_variation_table_custom_rows_field() {
