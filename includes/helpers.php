@@ -9,6 +9,48 @@ function palaplast_get_technical_sheets() {
 	return is_array( $sheets ) ? $sheets : array();
 }
 
+function palaplast_get_technical_sheet_categories() {
+	$sheets     = palaplast_get_technical_sheets();
+	$categories = array();
+
+	foreach ( $sheets as $sheet ) {
+		if ( ! is_array( $sheet ) ) {
+			continue;
+		}
+
+		$category_slug = isset( $sheet['category'] ) ? sanitize_title( (string) $sheet['category'] ) : '';
+		if ( '' === $category_slug ) {
+			continue;
+		}
+
+		$category_name = isset( $sheet['category_name'] ) ? sanitize_text_field( (string) $sheet['category_name'] ) : '';
+		if ( '' === $category_name ) {
+			$category_name = ucwords( str_replace( '-', ' ', $category_slug ) );
+		}
+
+		$categories[ $category_slug ] = $category_name;
+	}
+
+	asort( $categories, SORT_NATURAL | SORT_FLAG_CASE );
+
+	return $categories;
+}
+
+function palaplast_get_technical_sheet_category_name_by_slug( $category_slug ) {
+	$category_slug = sanitize_title( (string) $category_slug );
+
+	if ( '' === $category_slug ) {
+		return '';
+	}
+
+	$categories = palaplast_get_technical_sheet_categories();
+	if ( isset( $categories[ $category_slug ] ) ) {
+		return (string) $categories[ $category_slug ];
+	}
+
+	return '';
+}
+
 function palaplast_get_pricelists() {
 	$pricelists = get_option( 'palaplast_pricelists', array() );
 
