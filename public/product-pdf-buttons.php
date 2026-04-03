@@ -257,36 +257,20 @@ function palaplast_get_technical_sheets_for_shortcode_category( $category_slugs 
 		return array();
 	}
 
-	$categories = get_terms(
-		array(
-			'taxonomy'   => 'product_cat',
-			'hide_empty' => false,
-			'slug'       => $category_slugs,
-		)
-	);
+	$all_sheets = palaplast_get_technical_sheets();
+	$filtered   = array();
 
-	if ( is_wp_error( $categories ) || empty( $categories ) ) {
-		return array();
-	}
-
-	$all_sheets    = palaplast_get_technical_sheets();
-	$filtered      = array();
-	$seen_sheet_ids = array();
-
-	foreach ( $categories as $category ) {
-		if ( ! $category instanceof WP_Term ) {
+	foreach ( $all_sheets as $sheet_id => $sheet ) {
+		if ( ! is_array( $sheet ) ) {
 			continue;
 		}
 
-		$resolved_sheet = palaplast_resolve_category_sheet( (int) $category->term_id );
-		$sheet_id       = isset( $resolved_sheet['sheet_id'] ) ? (int) $resolved_sheet['sheet_id'] : 0;
-
-		if ( ! $sheet_id || isset( $seen_sheet_ids[ $sheet_id ] ) || ! isset( $all_sheets[ $sheet_id ] ) ) {
+		$sheet_category_slug = isset( $sheet['category'] ) ? sanitize_title( (string) $sheet['category'] ) : '';
+		if ( '' === $sheet_category_slug || ! in_array( $sheet_category_slug, $category_slugs, true ) ) {
 			continue;
 		}
 
-		$filtered[ $sheet_id ]      = $all_sheets[ $sheet_id ];
-		$seen_sheet_ids[ $sheet_id ] = true;
+		$filtered[ $sheet_id ] = $sheet;
 	}
 
 	return $filtered;
