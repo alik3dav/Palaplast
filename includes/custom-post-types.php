@@ -23,7 +23,7 @@ function palaplast_register_custom_post_types() {
 	);
 
 	register_post_type(
-		'palaplast_certificate',
+		'palaplast_cert',
 		array(
 			'labels'             => $certificate_labels,
 			'public'             => false,
