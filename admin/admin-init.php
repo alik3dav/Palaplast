@@ -31,8 +31,8 @@ function palaplast_register_pricelists_menu() {
 }
 
 function palaplast_register_certificates_menu() {
-	add_submenu_page( 'woocommerce', __( 'Certificates', 'palaplast' ), __( 'Certificates', 'palaplast' ), 'manage_woocommerce', 'edit.php?post_type=palaplast_certificate' );
-	add_submenu_page( 'woocommerce', __( 'Add Certificate', 'palaplast' ), __( 'Add Certificate', 'palaplast' ), 'manage_woocommerce', 'post-new.php?post_type=palaplast_certificate' );
+	add_submenu_page( 'woocommerce', __( 'Certificates', 'palaplast' ), __( 'Certificates', 'palaplast' ), 'manage_woocommerce', 'edit.php?post_type=palaplast_cert' );
+	add_submenu_page( 'woocommerce', __( 'Add Certificate', 'palaplast' ), __( 'Add Certificate', 'palaplast' ), 'manage_woocommerce', 'post-new.php?post_type=palaplast_cert' );
 }
 
 function palaplast_render_variation_table_custom_rows_field() {
