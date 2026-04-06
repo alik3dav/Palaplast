@@ -24,13 +24,20 @@ function palaplast_enqueue_styles() {
 }
 
 function palaplast_enqueue_admin_assets( $hook_suffix ) {
-	if ( ! in_array( $hook_suffix, array( 'woocommerce_page_palaplast-technical-sheets', 'woocommerce_page_palaplast-pricelists' ), true ) ) {
+	$screen                = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	$is_certificate_editor = in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) && $screen && 'palaplast_cert' === $screen->post_type;
+
+	if ( ! in_array( $hook_suffix, array( 'woocommerce_page_palaplast-technical-sheets', 'woocommerce_page_palaplast-pricelists' ), true ) && ! $is_certificate_editor ) {
 		return;
 	}
 
-	$selection_title = 'woocommerce_page_palaplast-pricelists' === $hook_suffix
-		? __( 'Select Pricelist PDF', 'palaplast' )
-		: __( 'Select Technical Sheet PDF', 'palaplast' );
+	if ( 'woocommerce_page_palaplast-pricelists' === $hook_suffix ) {
+		$selection_title = __( 'Select Pricelist PDF', 'palaplast' );
+	} elseif ( $is_certificate_editor ) {
+		$selection_title = __( 'Select Certificate PDF', 'palaplast' );
+	} else {
+		$selection_title = __( 'Select Technical Sheet PDF', 'palaplast' );
+	}
 
 	wp_enqueue_media();
 	wp_enqueue_style( 'palaplast-admin', PALAPLAST_PLUGIN_URL . 'assets/css/palaplast-admin.css', array(), PALAPLAST_VERSION );

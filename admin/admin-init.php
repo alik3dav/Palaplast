@@ -22,6 +22,8 @@ add_action( 'edited_product_cat', 'palaplast_save_category_pricelist' );
 add_action( 'woocommerce_product_options_general_product_data', 'palaplast_render_variation_table_custom_rows_field' );
 add_action( 'woocommerce_admin_process_product_object', 'palaplast_save_variation_table_custom_rows_field' );
 add_action( 'admin_notices', 'palaplast_render_certificates_shortcode_notice' );
+add_action( 'add_meta_boxes', 'palaplast_register_certificate_pdf_metabox' );
+add_action( 'save_post_palaplast_cert', 'palaplast_save_certificate_pdf_metabox' );
 
 function palaplast_register_technical_sheets_menu() {
 	add_submenu_page( 'woocommerce', __( 'Technical Sheets', 'palaplast' ), __( 'Technical Sheets', 'palaplast' ), 'manage_woocommerce', 'palaplast-technical-sheets', 'palaplast_render_technical_sheets_page' );
@@ -59,6 +61,56 @@ function palaplast_render_certificates_shortcode_notice() {
 		</p>
 	</div>
 	<?php
+}
+
+function palaplast_register_certificate_pdf_metabox() {
+	add_meta_box(
+		'palaplast-certificate-pdf',
+		__( 'Certificate PDF', 'palaplast' ),
+		'palaplast_render_certificate_pdf_metabox',
+		'palaplast_cert',
+		'side',
+		'default'
+	);
+}
+
+function palaplast_render_certificate_pdf_metabox( $post ) {
+	$attachment_id = (int) get_post_meta( $post->ID, 'palaplast_certificate_pdf_id', true );
+	$file_name     = $attachment_id ? basename( (string) get_attached_file( $attachment_id ) ) : '';
+	wp_nonce_field( 'palaplast_save_certificate_pdf', 'palaplast_certificate_pdf_nonce' );
+	?>
+	<p>
+		<input type="hidden" id="palaplast_attachment_id" name="palaplast_certificate_pdf_id" value="<?php echo esc_attr( $attachment_id ); ?>" />
+		<button type="button" class="button palaplast-select-pdf"><?php esc_html_e( 'Select PDF', 'palaplast' ); ?></button>
+		<button type="button" class="button palaplast-remove-pdf"><?php esc_html_e( 'Remove', 'palaplast' ); ?></button>
+	</p>
+	<p class="description palaplast-selected-file palaplast-admin-selected-file">
+		<?php echo $file_name ? esc_html( $file_name ) : esc_html__( 'No file selected.', 'palaplast' ); ?>
+	</p>
+	<?php
+}
+
+function palaplast_save_certificate_pdf_metabox( $post_id ) {
+	if ( ! isset( $_POST['palaplast_certificate_pdf_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['palaplast_certificate_pdf_nonce'] ) ), 'palaplast_save_certificate_pdf' ) ) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$attachment_id = isset( $_POST['palaplast_certificate_pdf_id'] ) ? (int) $_POST['palaplast_certificate_pdf_id'] : 0;
+
+	if ( $attachment_id && palaplast_is_valid_pdf_attachment( $attachment_id ) ) {
+		update_post_meta( $post_id, 'palaplast_certificate_pdf_id', $attachment_id );
+		return;
+	}
+
+	delete_post_meta( $post_id, 'palaplast_certificate_pdf_id' );
 }
 
 function palaplast_render_variation_table_custom_rows_field() {
