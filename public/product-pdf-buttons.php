@@ -201,14 +201,7 @@ function palaplast_pricelists_list_shortcode( $atts ) {
 }
 
 function palaplast_certificates_list_shortcode( $atts ) {
-	$atts = shortcode_atts(
-		array(
-			'title'      => __( 'Certificates', 'palaplast' ),
-			'show_title' => 'yes',
-		),
-		$atts,
-		'palaplast_certificates_list'
-	);
+	unset( $atts );
 
 	$certificates = get_posts(
 		array(
@@ -233,15 +226,9 @@ function palaplast_certificates_list_shortcode( $atts ) {
 		return '';
 	}
 
-	$show_title = isset( $atts['show_title'] ) ? wp_validate_boolean( $atts['show_title'] ) : true;
-	$title      = isset( $atts['title'] ) ? sanitize_text_field( (string) $atts['title'] ) : '';
-
 	ob_start();
 	?>
 	<div class="palaplast-certificates-list">
-		<?php if ( $show_title && '' !== $title ) : ?>
-			<h3 class="palaplast-certificates-list-title"><?php echo esc_html( $title ); ?></h3>
-		<?php endif; ?>
 		<ul class="palaplast-pdf-list" role="list">
 			<?php foreach ( $certificates as $certificate ) : ?>
 				<?php
