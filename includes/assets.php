@@ -9,7 +9,7 @@ function palaplast_enqueue_styles() {
 	if ( ! $should_enqueue && is_singular() ) {
 		$post = get_post();
 		if ( $post instanceof WP_Post ) {
-			$should_enqueue = has_shortcode( $post->post_content, 'palaplast_technical_sheets_list' ) || has_shortcode( $post->post_content, 'palaplast_pricelists_list' );
+			$should_enqueue = has_shortcode( $post->post_content, 'palaplast_technical_sheets_list' ) || has_shortcode( $post->post_content, 'palaplast_pricelists_list' ) || has_shortcode( $post->post_content, 'palaplast_certificates_list' );
 		}
 	}
 
