@@ -368,6 +368,14 @@
     color: #4b5563
 }
 
+.palaplast-certificates-list .palaplast-certificate-content :is(ul, ol) li {
+    margin-bottom: .45em
+}
+
+.palaplast-certificates-list .palaplast-certificate-content :is(ul, ol) li:last-child {
+    margin-bottom: .45em
+}
+
 .palaplast-certificates-list .palaplast-certificate-content>* {
     margin: 0
 }
