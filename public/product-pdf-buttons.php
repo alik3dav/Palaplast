@@ -245,6 +245,7 @@ function palaplast_certificates_list_shortcode( $atts ) {
 		<ul class="palaplast-pdf-list" role="list">
 			<?php foreach ( $certificates as $certificate ) : ?>
 				<?php
+				$certificate_pdf_url    = palaplast_get_certificate_pdf_url( $certificate );
 				$certificate_thumbnail = get_the_post_thumbnail(
 					$certificate,
 					'medium_large',
@@ -255,13 +256,22 @@ function palaplast_certificates_list_shortcode( $atts ) {
 				);
 				?>
 				<li class="palaplast-pdf-list-item palaplast-certificate-card">
-					<?php if ( $certificate_thumbnail ) : ?>
-						<div class="palaplast-certificate-card__media"><?php echo $certificate_thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+					<?php if ( $certificate_pdf_url ) : ?>
+						<a class="palaplast-certificate-card__link" href="<?php echo esc_url( $certificate_pdf_url ); ?>" target="_blank" rel="noopener noreferrer" download>
 					<?php endif; ?>
-					<div class="palaplast-certificate-card__body">
-						<div class="palaplast-pdf-list-item__title"><?php echo esc_html( get_the_title( $certificate ) ); ?></div>
-						<div class="palaplast-certificate-content"><?php echo wp_kses_post( apply_filters( 'the_content', (string) $certificate->post_content ) ); ?></div>
-					</div>
+						<?php if ( $certificate_thumbnail ) : ?>
+							<div class="palaplast-certificate-card__media"><?php echo $certificate_thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+						<?php endif; ?>
+						<div class="palaplast-certificate-card__body">
+							<div class="palaplast-pdf-list-item__title"><?php echo esc_html( get_the_title( $certificate ) ); ?></div>
+							<div class="palaplast-certificate-content"><?php echo wp_kses_post( apply_filters( 'the_content', (string) $certificate->post_content ) ); ?></div>
+							<?php if ( $certificate_pdf_url ) : ?>
+								<span class="palaplast-pdf-list-item__action"><?php esc_html_e( 'Download PDF', 'palaplast' ); ?></span>
+							<?php endif; ?>
+						</div>
+					<?php if ( $certificate_pdf_url ) : ?>
+						</a>
+					<?php endif; ?>
 				</li>
 			<?php endforeach; ?>
 		</ul>
@@ -269,6 +279,53 @@ function palaplast_certificates_list_shortcode( $atts ) {
 	<?php
 
 	return ob_get_clean();
+}
+
+function palaplast_get_certificate_pdf_url( $certificate_post ) {
+	if ( ! $certificate_post instanceof WP_Post ) {
+		return '';
+	}
+
+	$pdf_meta_keys = array(
+		'palaplast_certificate_pdf_id',
+		'_palaplast_certificate_pdf_id',
+		'certificate_pdf_id',
+		'pdf_id',
+		'pdf_attachment_id',
+	);
+
+	foreach ( $pdf_meta_keys as $meta_key ) {
+		$attachment_id = (int) get_post_meta( $certificate_post->ID, $meta_key, true );
+		if ( ! $attachment_id || ! function_exists( 'palaplast_is_valid_pdf_attachment' ) || ! palaplast_is_valid_pdf_attachment( $attachment_id ) ) {
+			continue;
+		}
+
+		$pdf_url = wp_get_attachment_url( $attachment_id );
+		if ( $pdf_url ) {
+			return (string) $pdf_url;
+		}
+	}
+
+	$pdf_url_meta_keys = array(
+		'palaplast_certificate_pdf_url',
+		'_palaplast_certificate_pdf_url',
+		'certificate_pdf_url',
+		'pdf_url',
+	);
+
+	foreach ( $pdf_url_meta_keys as $meta_key ) {
+		$pdf_url = trim( (string) get_post_meta( $certificate_post->ID, $meta_key, true ) );
+		if ( '' !== $pdf_url ) {
+			return $pdf_url;
+		}
+	}
+
+	$content = (string) $certificate_post->post_content;
+	if ( preg_match( '/href=[\'"]([^\'"]+\.pdf(?:\?[^\'"]*)?)[\'"]/i', $content, $matches ) ) {
+		return trim( (string) $matches[1] );
+	}
+
+	return '';
 }
 
 function palaplast_render_pdf_list_shortcode( $items, $atts, $wrapper_class, $title_class ) {

@@ -334,6 +334,14 @@
     min-height: 360px
 }
 
+.palaplast-certificates-list .palaplast-certificate-card__link {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    color: inherit;
+    text-decoration: none
+}
+
 .palaplast-certificates-list .palaplast-certificate-card__media {
     aspect-ratio: 3 / 4;
     background: #f3f4f6;
@@ -358,6 +366,11 @@
     font-size: 13px;
     line-height: 1.45;
     color: #4b5563
+}
+
+.palaplast-certificates-list .palaplast-certificate-card .palaplast-pdf-list-item__action {
+    margin-top: auto;
+    align-self: flex-start
 }
 
 @media (max-width:768px) {
