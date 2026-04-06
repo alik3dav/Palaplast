@@ -271,7 +271,7 @@
     justify-content: space-between;
     padding: 6px 8px;
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #fff;
     transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease
 }
@@ -303,7 +303,8 @@
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
-    transition: background-color .2s ease, color .2s ease
+    transition: background-color .2s ease, color .2s ease;
+    
 }
 
 .palaplast-pdf-list-item__action:hover,
@@ -321,7 +322,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 260px));
     justify-content: flex-start;
-    gap: 14px
+    gap: 8px
 }
 
 .palaplast-certificates-list .palaplast-certificate-card {
@@ -359,7 +360,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 12px 12px 14px
+    padding: 12px 12px 
 }
 
 .palaplast-certificates-list .palaplast-certificate-content {
@@ -368,24 +369,12 @@
     color: #4b5563
 }
 
-.palaplast-certificates-list .palaplast-certificate-content :is(ul, ol) li {
-    margin-bottom: .45em
-}
 
-.palaplast-certificates-list .palaplast-certificate-content :is(ul, ol) li:last-child {
-    margin-bottom: .45em
-}
 
-.palaplast-certificates-list .palaplast-certificate-content>* {
-    margin: 0
-}
 
-.palaplast-certificates-list .palaplast-certificate-content>*+* {
-    margin-top: 8px
-}
 
 .palaplast-certificates-list .palaplast-certificate-card .palaplast-pdf-list-item__action {
-    margin-top: auto;
+    
     align-self: flex-start
 }
 
