@@ -21,6 +21,7 @@ add_action( 'created_product_cat', 'palaplast_save_category_pricelist' );
 add_action( 'edited_product_cat', 'palaplast_save_category_pricelist' );
 add_action( 'woocommerce_product_options_general_product_data', 'palaplast_render_variation_table_custom_rows_field' );
 add_action( 'woocommerce_admin_process_product_object', 'palaplast_save_variation_table_custom_rows_field' );
+add_action( 'admin_notices', 'palaplast_render_certificates_shortcode_notice' );
 
 function palaplast_register_technical_sheets_menu() {
 	add_submenu_page( 'woocommerce', __( 'Technical Sheets', 'palaplast' ), __( 'Technical Sheets', 'palaplast' ), 'manage_woocommerce', 'palaplast-technical-sheets', 'palaplast_render_technical_sheets_page' );
@@ -33,6 +34,31 @@ function palaplast_register_pricelists_menu() {
 function palaplast_register_certificates_menu() {
 	add_submenu_page( 'woocommerce', __( 'Certificates', 'palaplast' ), __( 'Certificates', 'palaplast' ), 'manage_woocommerce', 'edit.php?post_type=palaplast_cert' );
 	add_submenu_page( 'woocommerce', __( 'Add Certificate', 'palaplast' ), __( 'Add Certificate', 'palaplast' ), 'manage_woocommerce', 'post-new.php?post_type=palaplast_cert' );
+}
+
+function palaplast_render_certificates_shortcode_notice() {
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		return;
+	}
+
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	if ( ! $screen || 'palaplast_cert' !== $screen->post_type ) {
+		return;
+	}
+
+	?>
+	<div class="notice notice-info palaplast-admin-notice">
+		<p>
+			<strong><?php esc_html_e( 'Frontend shortcode (certificates list):', 'palaplast' ); ?></strong>
+			<code>[palaplast_certificates_list]</code>
+		</p>
+		<p>
+			<strong><?php esc_html_e( 'Optional: hide title or set custom title:', 'palaplast' ); ?></strong>
+			<code>[palaplast_certificates_list show_title="no"]</code>
+			<code>[palaplast_certificates_list title="Quality Certificates"]</code>
+		</p>
+	</div>
+	<?php
 }
 
 function palaplast_render_variation_table_custom_rows_field() {

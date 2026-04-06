@@ -200,6 +200,62 @@ function palaplast_pricelists_list_shortcode( $atts ) {
 	);
 }
 
+function palaplast_certificates_list_shortcode( $atts ) {
+	$atts = shortcode_atts(
+		array(
+			'title'      => __( 'Certificates', 'palaplast' ),
+			'show_title' => 'yes',
+		),
+		$atts,
+		'palaplast_certificates_list'
+	);
+
+	$certificates = get_posts(
+		array(
+			'post_type'              => 'palaplast_cert',
+			'post_status'            => 'publish',
+			'posts_per_page'         => -1,
+			'orderby'                => array(
+				'menu_order' => 'ASC',
+				'date'       => 'DESC',
+				'ID'         => 'DESC',
+			),
+			'order'                  => 'ASC',
+			'suppress_filters'       => false,
+			'ignore_sticky_posts'    => true,
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		)
+	);
+
+	if ( empty( $certificates ) ) {
+		return '';
+	}
+
+	$show_title = isset( $atts['show_title'] ) ? wp_validate_boolean( $atts['show_title'] ) : true;
+	$title      = isset( $atts['title'] ) ? sanitize_text_field( (string) $atts['title'] ) : '';
+
+	ob_start();
+	?>
+	<div class="palaplast-certificates-list">
+		<?php if ( $show_title && '' !== $title ) : ?>
+			<h3 class="palaplast-certificates-list-title"><?php echo esc_html( $title ); ?></h3>
+		<?php endif; ?>
+		<ul class="palaplast-pdf-list" role="list">
+			<?php foreach ( $certificates as $certificate ) : ?>
+				<li class="palaplast-pdf-list-item">
+					<div class="palaplast-pdf-list-item__title"><?php echo esc_html( get_the_title( $certificate ) ); ?></div>
+					<div class="palaplast-certificate-content"><?php echo wp_kses_post( apply_filters( 'the_content', (string) $certificate->post_content ) ); ?></div>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+	</div>
+	<?php
+
+	return ob_get_clean();
+}
+
 function palaplast_render_pdf_list_shortcode( $items, $atts, $wrapper_class, $title_class ) {
 	if ( empty( $items ) || ! is_array( $items ) ) {
 		return '';
