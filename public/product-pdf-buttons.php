@@ -244,9 +244,24 @@ function palaplast_certificates_list_shortcode( $atts ) {
 		<?php endif; ?>
 		<ul class="palaplast-pdf-list" role="list">
 			<?php foreach ( $certificates as $certificate ) : ?>
-				<li class="palaplast-pdf-list-item">
-					<div class="palaplast-pdf-list-item__title"><?php echo esc_html( get_the_title( $certificate ) ); ?></div>
-					<div class="palaplast-certificate-content"><?php echo wp_kses_post( apply_filters( 'the_content', (string) $certificate->post_content ) ); ?></div>
+				<?php
+				$certificate_thumbnail = get_the_post_thumbnail(
+					$certificate,
+					'medium_large',
+					array(
+						'class'   => 'palaplast-certificate-card__thumbnail',
+						'loading' => 'lazy',
+					)
+				);
+				?>
+				<li class="palaplast-pdf-list-item palaplast-certificate-card">
+					<?php if ( $certificate_thumbnail ) : ?>
+						<div class="palaplast-certificate-card__media"><?php echo $certificate_thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+					<?php endif; ?>
+					<div class="palaplast-certificate-card__body">
+						<div class="palaplast-pdf-list-item__title"><?php echo esc_html( get_the_title( $certificate ) ); ?></div>
+						<div class="palaplast-certificate-content"><?php echo wp_kses_post( apply_filters( 'the_content', (string) $certificate->post_content ) ); ?></div>
+					</div>
 				</li>
 			<?php endforeach; ?>
 		</ul>
