@@ -368,6 +368,14 @@
     color: #4b5563
 }
 
+.palaplast-certificates-list .palaplast-certificate-content>* {
+    margin: 0
+}
+
+.palaplast-certificates-list .palaplast-certificate-content>*+* {
+    margin-top: 8px
+}
+
 .palaplast-certificates-list .palaplast-certificate-card .palaplast-pdf-list-item__action {
     margin-top: auto;
     align-self: flex-start
