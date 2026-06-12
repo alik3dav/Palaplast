@@ -117,6 +117,45 @@ function palaplast_variation_table_shortcode( $atts ) {
 	return palaplast_render_matrix_table_for_product( $product_id, true );
 }
 
+function palaplast_get_variation_table_allowed_html() {
+	$allowed_html = wp_kses_allowed_html( 'post' );
+
+	$allowed_html['table'] = array(
+		'aria-label' => true,
+		'class'      => true,
+	);
+	$allowed_html['thead'] = array();
+	$allowed_html['tbody'] = array();
+	$allowed_html['tr']    = array(
+		'class'             => true,
+		'data-variation-id' => true,
+	);
+	$allowed_html['th']    = array(
+		'class' => true,
+		'scope' => true,
+	);
+	$allowed_html['td']    = array(
+		'class'   => true,
+		'colspan' => true,
+	);
+	$allowed_html['button'] = array(
+		'aria-label'      => true,
+		'class'           => true,
+		'data-copy-value' => true,
+		'type'            => true,
+	);
+	$allowed_html['svg']    = array(
+		'aria-hidden' => true,
+		'focusable'   => true,
+		'viewbox'     => true,
+	);
+	$allowed_html['path']   = array(
+		'd' => true,
+	);
+
+	return $allowed_html;
+}
+
 function palaplast_render_matrix_table_for_product( $product_id, $return_html = false ) {
 	$product_id = palaplast_get_current_language_product_id( $product_id );
 	$product    = wc_get_product( $product_id );
@@ -191,7 +230,7 @@ function palaplast_render_matrix_table_for_product( $product_id, $return_html = 
 		return $output;
 	}
 
-	echo $output;
+	echo wp_kses( $output, palaplast_get_variation_table_allowed_html() );
 
 	return null;
 }

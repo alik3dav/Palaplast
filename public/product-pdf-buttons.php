@@ -79,7 +79,7 @@ function palaplast_render_technical_sheet_button_for_product( $product_id = 0, $
 	}
 
 	palaplast_mark_pdf_button_rendered( 'technical_sheet', $product_id );
-	echo $output;
+	echo wp_kses_post( $output );
 
 	return null;
 }
@@ -128,7 +128,7 @@ function palaplast_render_pricelist_button_for_product( $product_id = 0, $return
 	}
 
 	palaplast_mark_pdf_button_rendered( 'pricelist', $product_id );
-	echo $output;
+	echo wp_kses_post( $output );
 
 	return null;
 }
