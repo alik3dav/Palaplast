@@ -58,3 +58,16 @@
 	border-radius: 50%;
 	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
+
+/* Keep the WooCommerce variation editor focused on Palaplast-managed fields. */
+#variable_product_options .woocommerce_variation p[class*="variable_regular_price"],
+#variable_product_options .woocommerce_variation p[class*="variable_sale_price"],
+#variable_product_options .woocommerce_variation p[class*="variable_stock_status"],
+#variable_product_options .woocommerce_variation p[class*="variable_weight"],
+#variable_product_options .woocommerce_variation p[class*="variable_shipping_class"],
+#variable_product_options .woocommerce_variation p[class*="variable_description"],
+#variable_product_options .woocommerce_variation .dimensions_field,
+#variable_product_options .woocommerce_variation .variable_description,
+#variable_product_options .woocommerce_variation .variable_pricing {
+	display: none !important;
+}
