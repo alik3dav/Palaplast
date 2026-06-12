@@ -41,6 +41,8 @@ function palaplast_enqueue_admin_assets( $hook_suffix ) {
 	}
 
 	if ( $is_product_editor ) {
+		wp_enqueue_script( 'jquery-core' );
+		wp_add_inline_script( 'jquery-core', palaplast_get_admin_product_editor_scripts() );
 		return;
 	}
 
@@ -57,6 +59,54 @@ function palaplast_enqueue_admin_assets( $hook_suffix ) {
 		'jquery-core',
 		"jQuery(function($){var frame;$('.palaplast-select-pdf').on('click',function(e){e.preventDefault();if(frame){frame.open();return;}frame=wp.media({title:'" . esc_js( $selection_title ) . "',button:{text:'" . esc_js( __( 'Use PDF', 'palaplast' ) ) . "'},library:{type:'application/pdf'},multiple:false});frame.on('select',function(){var attachment=frame.state().get('selection').first().toJSON();$('#palaplast_attachment_id').val(attachment.id);$('.palaplast-selected-file').text(attachment.filename || attachment.url);});frame.open();});$('.palaplast-remove-pdf').on('click',function(e){e.preventDefault();$('#palaplast_attachment_id').val('');$('.palaplast-selected-file').text('" . esc_js( __( 'No file selected.', 'palaplast' ) ) . "');});});"
 	);
+}
+
+
+function palaplast_get_admin_product_editor_scripts() {
+	return <<<'JS'
+jQuery(function($){
+	var hiddenFieldSelectors = [
+		'input[name^="variable_global_unique_id"]',
+		'input[id^="variable_global_unique_id"]',
+		'select[name^="variable_shipping_class"]'
+	];
+	var hiddenToggleSelectors = [
+		'input[name^="variable_is_downloadable"]',
+		'input[name^="variable_is_virtual"]'
+	];
+	var hiddenLabelTexts = [
+		'Downloadable',
+		'Virtual',
+		'GTIN, UPC, EAN, or ISBN',
+		'Shipping class'
+	];
+	var hideUnusedVariationFields = function(context){
+		var $context = $(context || document);
+		$.each(hiddenFieldSelectors, function(i, selector){
+			$context.find(selector).each(function(){
+				$(this).closest('p.form-row, p, .form-field').hide();
+			});
+		});
+		$.each(hiddenToggleSelectors, function(i, selector){
+			$context.find(selector).each(function(){
+				$(this).closest('label').hide();
+			});
+		});
+		$context.find('#variable_product_options .woocommerce_variation label').each(function(){
+			var $label = $(this);
+			var labelText = $.trim($label.clone().children().remove().end().text()).replace(/\s+/g, ' ');
+			if (-1 !== $.inArray(labelText, hiddenLabelTexts)) {
+				$label.hide();
+			}
+		});
+		$context.find('#variable_product_options .woocommerce_variation .variable_sku_field, #variable_product_options .woocommerce_variation p[class*="variable_sku"]').show();
+	};
+	hideUnusedVariationFields(document);
+	$(document).on('woocommerce_variations_loaded woocommerce_variations_added', function(){
+		hideUnusedVariationFields(document);
+	});
+});
+JS;
 }
 
 function palaplast_get_scripts() {

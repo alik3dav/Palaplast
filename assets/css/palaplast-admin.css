@@ -28,26 +28,23 @@
 .palaplast-variation-attribute-colors {
 	box-sizing: border-box;
 	clear: both;
-	padding: 10px 12px;
-	margin: 8px 0;
-	border: 1px solid #dcdcde;
-	background: #fff;
-}
-
-.palaplast-variation-attribute-colors__title {
-	margin: 0 0 4px;
+	padding: 0;
+	margin: 4px 0 0;
 }
 
 .palaplast-variation-attribute-colors__row {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	gap: 8px;
-	margin: 8px 0 0;
+	gap: 6px;
+	margin: 0 12px 8px 0;
 }
 
 .palaplast-variation-attribute-colors__label {
-	min-width: 130px;
 	font-weight: 600;
+}
+
+.palaplast-variation-attribute-colors select {
+	max-width: 150px;
 }
 
 .palaplast-variation-attribute-colors__preview {
@@ -65,11 +62,18 @@
 #variable_product_options .woocommerce_variation p[class*="variable_stock_status"],
 #variable_product_options .woocommerce_variation p[class*="variable_weight"],
 #variable_product_options .woocommerce_variation p[class*="variable_shipping_class"],
+#variable_product_options .woocommerce_variation p[class*="variable_global_unique_id"],
+#variable_product_options .woocommerce_variation p[class*="global_unique_id"]:not([class*="variable_sku"]),
 #variable_product_options .woocommerce_variation p[class*="variable_description"],
 #variable_product_options .woocommerce_variation .dimensions_field,
 #variable_product_options .woocommerce_variation .variable_description,
 #variable_product_options .woocommerce_variation .variable_pricing {
 	display: none !important;
+}
+
+#variable_product_options .woocommerce_variation .variable_sku_field,
+#variable_product_options .woocommerce_variation p[class*="variable_sku"] {
+	display: block !important;
 }
 
 .palaplast-colors-card {
@@ -96,6 +100,11 @@
 #variable_product_options .woocommerce_variation .upload_image_button,
 #variable_product_options .woocommerce_variation .remove_variation_image,
 #variable_product_options .woocommerce_variation .variable_shipping_class_field,
+#variable_product_options .woocommerce_variation .variable_global_unique_id_field,
+#variable_product_options .woocommerce_variation .form-row:has(input[name^="variable_global_unique_id"]),
+#variable_product_options .woocommerce_variation .form-row:has(input[id^="variable_global_unique_id"]),
+#variable_product_options .woocommerce_variation label:has(input[name^="variable_is_downloadable"]),
+#variable_product_options .woocommerce_variation label:has(input[name^="variable_is_virtual"]),
 #variable_product_options .woocommerce_variation select[name^="variable_shipping_class"] {
 	display: none !important;
 }

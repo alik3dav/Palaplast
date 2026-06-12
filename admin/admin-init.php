@@ -154,8 +154,6 @@ function palaplast_render_variation_attribute_color_fields( $loop, $variation_da
 	$color_options = palaplast_get_variation_attribute_color_options();
 	?>
 	<div class="palaplast-variation-attribute-colors form-row form-row-full">
-		<p class="palaplast-variation-attribute-colors__title"><strong><?php esc_html_e( 'Variation Table Attribute Colors', 'palaplast' ); ?></strong></p>
-		<p class="description"><?php esc_html_e( 'Choose a color for an attribute value to show it as a colored circle next to the value in the frontend variation table.', 'palaplast' ); ?></p>
 		<?php foreach ( $attributes as $attribute_key => $attribute_value ) :
 			$attribute_name = 0 === strpos( $attribute_key, 'attribute_' ) ? substr( $attribute_key, 10 ) : $attribute_key;
 			if ( '' === trim( (string) $attribute_value ) ) {
