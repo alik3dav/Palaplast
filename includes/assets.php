@@ -80,14 +80,14 @@ jQuery(function($){
 	];
 	var keepSkuFieldsVisible = function(context){
 		$(context || document).find('#variable_product_options .woocommerce_variation input[name^="variable_sku"], #variable_product_options .woocommerce_variation input[id^="variable_sku"]').each(function(){
-			$(this).show().closest('p.form-row, p, .form-field').show();
+			$(this).show().closest('p.form-row, p, .form-field').show().closest('.options').show();
 		});
 	};
 	var hideUnusedVariationFields = function(context){
 		var $context = $(context || document);
 		$.each(hiddenFieldSelectors, function(i, selector){
 			$context.find(selector).each(function(){
-				$(this).closest('p.form-row, p, label, .form-field, .options, .wc-radios, .woocommerce_variable_attributes').not('.woocommerce_variable_attributes').hide();
+				$(this).closest('p.form-row, p, label, .form-field, .wc-radios, .woocommerce_variable_attributes').not('.woocommerce_variable_attributes').hide();
 			});
 		});
 		$context.find('#variable_product_options .woocommerce_variation label').each(function(){
